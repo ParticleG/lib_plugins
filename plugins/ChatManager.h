@@ -5,32 +5,27 @@
 #pragma once
 
 #include <drogon/plugins/Plugin.h>
-#include <structures/Player.h>
-#include <structures/Room.h>
+#include <structures/BaseManager.h>
+#include <structures/ChatRoom.h>
 
-namespace tech ::structures {
-    class ChatManager : public drogon::Plugin<ChatManager> {
+namespace tech ::plugins {
+    class ChatManager : public tech::structures::BaseManager<tech::structures::ChatRoom>, public drogon::Plugin<ChatManager> {
     public:
-        ChatManager() {}
-
         virtual void initAndStart(const Json::Value &config) override;
 
         virtual void shutdown() override;
 
-        std::string getID() const;
+        void subscribe(const std::string &id, drogon::WebSocketConnectionPtr connection) override;
 
-        drogon::SubscriberID joinChat(const tech::structures::Room::MessageHandler &handler, const std::shared_ptr<tech::structures::Player> &player);
+        void unsubscribe(const std::string &id, const drogon::WebSocketConnectionPtr &connection) override;
 
-        void quitChat(drogon::SubscriberID playerID);
-
-        void chat(const std::string &message);
-
-        uint64_t chatCount();
+        void publish(const std::string &rid, const drogon::WebSocketConnectionPtr &connection, const std::string &message);
 
     private:
-        std::string _roomID;
-        std::unique_ptr<tech::structures::Room> _chattingRoom;
-        mutable std::shared_mutex _sharedMutex;
+        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection, const std::string &message);
+
+        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection);
+
     };
 }
 
