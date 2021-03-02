@@ -9,7 +9,7 @@
 #include <structures/HandlerFactory.h>
 #include <utils/WebSocket.h>
 
-namespace tech::plugin {
+namespace tech::plugins {
     class HandlerManager : public drogon::Plugin<HandlerManager> {
     public:
         HandlerManager();
@@ -20,6 +20,7 @@ namespace tech::plugin {
 
         drogon::CloseCode process(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
+                const tech::utils::WebSocket::Type &type,
                 const unsigned int &action,
                 const Json::Value &request,
                 Json::Value &response
