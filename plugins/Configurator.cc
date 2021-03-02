@@ -4,7 +4,7 @@
 
 #include <plugins/Configurator.h>
 
-using namespace tech::plugin;
+using namespace tech::plugins;
 
 void Configurator::initAndStart(const Json::Value &config) {
     if (config.isMember("auth_token_expire_time") && config["access_token_expire_time"].isUInt()) {
@@ -25,10 +25,10 @@ void Configurator::shutdown() {
     /// Shutdown the plugin
 }
 
-int Configurator::getAuthExpire() const {
+uint64_t Configurator::getAuthExpire() const {
     return _authTokenExpireTime;
 }
 
-int Configurator::getAccessExpire() const {
+uint64_t Configurator::getAccessExpire() const {
     return _accessTokenExpireTime;
 }

@@ -6,7 +6,7 @@
 
 #include <drogon/plugins/Plugin.h>
 
-namespace tech::plugin {
+namespace tech::plugins {
     class Configurator : public drogon::Plugin<Configurator> {
     public:
         Configurator() {}
@@ -15,9 +15,9 @@ namespace tech::plugin {
 
         virtual void shutdown() override;
 
-        int getAuthExpire() const;
+        uint64_t getAuthExpire() const;
 
-        int getAccessExpire() const;
+        uint64_t getAccessExpire() const;
 
     private:
         uint64_t _authTokenExpireTime, _accessTokenExpireTime;
