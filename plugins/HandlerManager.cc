@@ -7,7 +7,10 @@
 #include <strategies/app/GetNotice.h>
 #include <strategies/user/GetAccessToken.h>
 #include <strategies/user/GetUserInfo.h>
-#include <strategies/chat/EnterChatChannel.h>
+#include <strategies/chat/GetChannelList.h>
+#include <strategies/chat/EnterChannel.h>
+#include <strategies/chat/LeaveChannel.h>
+#include <strategies/chat/PublishMessage.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
@@ -38,7 +41,10 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     static HandlerRegistrar<MessageHandler, GetUserInfo> getUserInfoRegistrar(userPrefix + 1);
 
     auto chatPrefix = config["Chat"].asInt() * 10;
-    static HandlerRegistrar<MessageHandler, EnterChatChannel> enterChatChannelRegistrar(chatPrefix + 1);
+    static HandlerRegistrar<MessageHandler, GetChannelList> getChannelListRegistrar(chatPrefix + 0);
+    static HandlerRegistrar<MessageHandler, EnterChannel> enterChannelRegistrar(chatPrefix + 1);
+    static HandlerRegistrar<MessageHandler, LeaveChannel> leaveChannelRegistrar(chatPrefix + 2);
+    static HandlerRegistrar<MessageHandler, PublishMessage> publishMessageRegistrar(chatPrefix + 3);
 
     auto playPrefix = config["Play"].asInt() * 10;
     auto streamPrefix = config["Stream"].asInt() * 10;
