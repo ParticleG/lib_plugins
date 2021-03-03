@@ -53,13 +53,13 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
 
                 Json::Value message, response;
                 message["message"] = "Broadcast";
-                message["action"] = 0;
+                message["action"] = 1;
                 message["rid"] = id;
                 message["data"] = _getPlayerInfo(connection);
                 room->publish(move(message));
 
                 response["message"] = "OK";
-                response["action"] = 0;
+                response["action"] = 1;
                 response["rid"] = id;
                 response["data"] = room->getHistory(0, 20);
                 connection->send(WebSocket::fromJson(response));
@@ -78,13 +78,13 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
 
             Json::Value message, response;
             message["message"] = "Broadcast";
-            message["action"] = 0;
+            message["action"] = 1;
             message["rid"] = id;
             message["data"] = _getPlayerInfo(connection);
             room->publish(move(message));
 
             response["message"] = "OK";
-            response["action"] = 0;
+            response["action"] = 1;
             response["rid"] = id;
             response["data"] = room->getHistory(0, 20);
             connection->send(WebSocket::fromJson(response));
@@ -97,36 +97,25 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
 }
 
 void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
-    {
-        shared_lock<shared_mutex> lock(_sharedMutex);
-        auto iter = _idsMap.find(id);
-        if (iter == _idsMap.end()) {
-            throw out_of_range("Room not found");
-        }
-        auto room = iter->second;
-        room->unsubscribe(connection);
-        
-        Json::Value message, response;
-        message["message"] = "Broadcast";
-        message["action"] = 1;
-        message["rid"] = id;
-        message["data"] = _getPlayerInfo(connection);
-        room->publish(move(message));
-
-        response["message"] = "OK";
-        response["action"] = 0;
-        response["rid"] = id;
-        connection->send(WebSocket::fromJson(response));
-        if (!iter->second->isEmpty())
-            return;
-    }
-    unique_lock<shared_mutex> lock(_sharedMutex);
+    shared_lock<shared_mutex> lock(_sharedMutex);
     auto iter = _idsMap.find(id);
     if (iter == _idsMap.end()) {
         throw out_of_range("Room not found");
     }
-    if (iter->second->isEmpty())
-        _idsMap.erase(iter);
+    auto room = iter->second;
+    room->unsubscribe(connection);
+
+    Json::Value message, response;
+    message["message"] = "Broadcast";
+    message["action"] = 2;
+    message["rid"] = id;
+    message["data"] = _getPlayerInfo(connection);
+    room->publish(move(message));
+
+    response["message"] = "OK";
+    response["action"] = 2;
+    response["rid"] = id;
+    connection->send(WebSocket::fromJson(response));
 }
 
 void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &connection, const string &message) {
@@ -136,12 +125,21 @@ void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &conne
         auto room = iter->second;
         Json::Value response;
         response["message"] = "Broadcast";
-        response["action"] = 2;
+        response["action"] = 3;
         response["rid"] = rid;
         response["data"] = _getPlayerInfo(connection, message);
         room->publish(message);
     }
     throw out_of_range("Channel not found");
+}
+
+Json::Value ChatManager::parseInfo() const {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    Json::Value info(Json::arrayValue);
+    for (const auto &pair : _idsMap) {
+        info.append(pair.second->parseInfo());
+    }
+    return info;
 }
 
 Json::Value ChatManager::_getPlayerInfo(const WebSocketConnectionPtr &connection, const string &message) {

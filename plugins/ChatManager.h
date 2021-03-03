@@ -21,6 +21,8 @@ namespace tech ::plugins {
 
         void publish(const std::string &rid, const drogon::WebSocketConnectionPtr &connection, const std::string &message);
 
+        Json::Value parseInfo() const;
+
     private:
         static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection, const std::string &message);
 
