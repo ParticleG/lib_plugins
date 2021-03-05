@@ -21,7 +21,7 @@ namespace tech::plugins {
         drogon::CloseCode process(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const tech::utils::WebSocket::Type &type,
-                const unsigned int &action,
+                int action,
                 const Json::Value &request,
                 Json::Value &response
         );
