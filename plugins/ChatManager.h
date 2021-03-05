@@ -9,7 +9,9 @@
 #include <structures/ChatRoom.h>
 
 namespace tech ::plugins {
-    class ChatManager : public tech::structures::BaseManager<tech::structures::ChatRoom>, public drogon::Plugin<ChatManager> {
+    class ChatManager :
+            public tech::structures::BaseManager<tech::structures::ChatRoom>,
+            public drogon::Plugin<ChatManager> {
     public:
         virtual void initAndStart(const Json::Value &config) override;
 

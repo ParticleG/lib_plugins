@@ -3,7 +3,6 @@
 //
 
 #include <plugins/ChatManager.h>
-#include <structures/ChatRoom.h>
 #include <utils/Utils.h>
 
 using namespace tech::plugins;
@@ -20,13 +19,10 @@ void ChatManager::initAndStart(const Json::Value &config) {
                     channel.isMember("capacity") && channel["capacity"].isUInt64() &&
                     channel.isMember("historyCount") && channel["historyCount"].isUInt64()
                     ) {
-                createRoom(
+                createRoom(move(ChatRoom(
                         channel["id"].asString(),
-                        move(ChatRoom(
-                                channel["id"].asString(),
-                                channel["capacity"].asUInt64(),
-                                channel["historyCount"].asUInt64()))
-                );
+                        channel["capacity"].asUInt64(),
+                        channel["historyCount"].asUInt())));
             } else {
                 LOG_ERROR << R"(Requires string value "id" and UInt64 type "capacity" in config['channels'])";
                 abort();
@@ -47,32 +43,6 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
         shared_lock<shared_mutex> lock(_sharedMutex);
         auto iter = _idsMap.find(id);
         if (iter != _idsMap.end()) {
-            try {
-                auto room = iter->second;
-                room->subscribe(connection);
-
-                Json::Value message, response;
-                message["message"] = "Broadcast";
-                message["action"] = 1;
-                message["rid"] = id;
-                message["data"] = _getPlayerInfo(connection);
-                room->publish(move(message));
-
-                response["message"] = "OK";
-                response["action"] = 1;
-                response["rid"] = id;
-                response["data"] = room->getHistory(0, 20);
-                connection->send(WebSocket::fromJson(response));
-            } catch (range_error &error) {
-                LOG_WARN << error.what();
-                throw error;
-            }
-        }
-    }
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(id);
-    if (iter != _idsMap.end()) {
-        try {
             auto room = iter->second;
             room->subscribe(connection);
 
@@ -88,10 +58,28 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
             response["rid"] = id;
             response["data"] = room->getHistory(0, 20);
             connection->send(WebSocket::fromJson(response));
-        } catch (range_error &error) {
-            LOG_WARN << error.what();
-            throw error;
+            return;
         }
+    }
+    unique_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(id);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        room->subscribe(connection);
+
+        Json::Value message, response;
+        message["message"] = "Broadcast";
+        message["action"] = 1;
+        message["rid"] = id;
+        message["data"] = _getPlayerInfo(connection);
+        room->publish(move(message));
+
+        response["message"] = "OK";
+        response["action"] = 1;
+        response["rid"] = id;
+        response["data"] = room->getHistory(0, 20);
+        connection->send(WebSocket::fromJson(response));
+        return;
     }
     throw out_of_range("Room not found");
 }
@@ -127,8 +115,8 @@ void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &conne
         response["message"] = "Broadcast";
         response["action"] = 3;
         response["rid"] = rid;
-        response["data"] = _getPlayerInfo(connection, message);
-        room->publish(message);
+        response["data"]["histories"] = _getPlayerInfo(connection, message);
+        room->publish(move(response));
     }
     throw out_of_range("Channel not found");
 }
@@ -159,4 +147,3 @@ Json::Value ChatManager::_getPlayerInfo(const WebSocketConnectionPtr &connection
     result["username"] = info->getValueOfId();
     return result;
 }
-
