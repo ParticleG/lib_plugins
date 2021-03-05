@@ -3,120 +3,315 @@
 //
 
 #include <plugins/PlayManager.h>
+#include <utils/Crypto.h>
+#include <utils/Utils.h>
 
-using namespace tech::plugin;
+using namespace tech::plugins;
 using namespace tech::structures;
+using namespace tech::utils;
 using namespace drogon;
 using namespace std;
 
 void PlayManager::initAndStart(const Json::Value &config) {
-    if (config.isMember("room_types") && config["room_types"].isArray()) {
-        for (auto &roomType : config["room_types"]) {
-            _roomTypes.insert({roomType["name"].asString(), roomType["capacity"].asUInt64()});
+    if (config.isMember("typeList") && config["typeList"].isArray()) {
+        for (auto &type : config["typeList"]) {
+            if (
+                    type.isMember("type") && type["type"].isString() &&
+                    type.isMember("capacity") && type["capacity"].isUInt64()
+                    ) {
+                _typesMap[type["type"].asString()] = type["capacity"].asUInt64();
+            } else {
+                LOG_ERROR << R"(Requires string value "type" and UInt64 value "capacity" in config['typeList'])";
+                abort();
+            }
         }
-        if (_roomTypes.empty()) {
-            LOG_ERROR << "You must set at least one roomType";
-            abort();
-        }
-        _roomManager = make_unique<RoomManager>();
     } else {
-        LOG_ERROR << R"(Requires array value "room_types" in plugin PlayManager's config')";
+        LOG_ERROR << R"(Requires array value "channels" in plugin ChatManager's config')";
         abort();
     }
 }
 
-void PlayManager::shutdown() {}
-
-Json::Value PlayManager::createRoom(const string &roomID, const string &name, const string &password,
-                                    const string &roomType) {
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->createRoom(roomID, name, password, roomType, _roomTypes.at(roomType));
-    return _roomManager->getRoomJson(roomID);
+void PlayManager::shutdown() {
+    /// Shutdown the plugin
 }
 
-SubscriberID PlayManager::subscribe(const string &roomID,
-                                    const RoomManager::MessageHandler &handler, const shared_ptr<Player> &player) {
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->subscribe(roomID, handler, player);
-}
-
-void PlayManager::unsubscribe(const string &roomID, const SubscriberID &playerID) {
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->unsubscribe(roomID, playerID);
-}
-
-bool PlayManager::checkPassword(const string &roomID, const string &password) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->checkPassword(roomID, password);
-}
-
-void PlayManager::startGame(const string &roomID) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->startGame(roomID);
-}
-
-void PlayManager::changeGroup(const string &roomID, drogon::SubscriberID id, const unsigned int &group) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->changeGroup(roomID, id, group);
-}
-
-void PlayManager::setDead(const string &roomID, drogon::SubscriberID id) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->setDead(roomID, id);
-}
-
-uint64_t PlayManager::endGame(const string &roomID) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->endGame(roomID);
-}
-
-void PlayManager::publish(const string &roomID, const string &message) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->publish(roomID, message);
-}
-
-void PlayManager::publish(const string &roomID,
-                          const string &message,
-                          const SubscriberID &excludedID) const {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->publish(roomID, message, excludedID);
-}
-
-void PlayManager::tell(const string &roomID, const string &message, const SubscriberID &targetID) const {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    _roomManager->tell(roomID, message, targetID);
-}
-
-bool PlayManager::checkReadyState(const string &roomID) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->checkReadyState(roomID);
-}
-
-bool PlayManager::setReadyState(const string &roomID, const bool &isReady) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->setReadyState(roomID, isReady);
-}
-
-std::string PlayManager::getInfos(const string &roomID) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->getInfos(roomID);
-}
-
-[[maybe_unused]] size_t PlayManager::size() {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->size();
-}
-
-Json::Value PlayManager::getRoomList() {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    return _roomManager->getRoomList();
-}
-
-Json::Value PlayManager::getRoomList(const string &roomType) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _roomTypes.find(roomType);
-    if (iter != _roomTypes.end()) {
-        return _roomManager->getRoomList(roomType);
+uint64_t PlayManager::getCapacity(const string &type) const {
+    auto iter = _typesMap.find(type);
+    if (iter != _typesMap.end()) {
+        return iter->second;
     }
-    throw out_of_range("Unsupported room type");
+    throw out_of_range("Type not found");
+}
+
+void PlayManager::subscribe(
+        const string &id,
+        const string &password,
+        const WebSocketConnectionPtr &connection
+) {
+    {
+        shared_lock<shared_mutex> lock(_sharedMutex);
+        auto iter = _idsMap.find(id);
+        if (iter != _idsMap.end()) {
+            auto room = iter->second;
+            if (room->getStart()) {
+                throw invalid_argument("Room already started");
+            }
+            if (!room->checkPassword(password)) {
+                throw invalid_argument("Password is incorrect");
+            }
+            room->subscribe(connection);
+            auto play = connection->getContext<Play>();
+
+            play->setReady(false);
+
+            Json::Value data, message, response;
+            data["config"] = play->getConfig();
+            data["ready"] = play->getReady();
+
+            message["message"] = "Broadcast";
+            message["action"] = 2;
+            message["data"] = _parsePlayerInfo(connection, move(data));
+            room->publish(2, move(message), play->getSidsMap()->begin()->second);
+
+            response["message"] = "OK";
+            response["action"] = 2;
+            response["data"]["ready"] = play->getReady();
+            response["data"]["histories"] = room->getHistory(0, 10);
+            response["data"]["players"] = room->getPlayers();
+            connection->send(WebSocket::fromJson(response));
+            return;
+        }
+    }
+    unique_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(id);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        if (!room->checkPassword(password)) {
+            throw invalid_argument("Password is incorrect");
+        }
+        room->subscribe(connection);
+        auto play = connection->getContext<Play>();
+
+        play->setReady(false);
+
+        Json::Value data, message, response;
+        data["config"] = play->getConfig();
+        data["ready"] = play->getReady();
+
+        message["message"] = "Broadcast";
+        message["action"] = 2;
+        message["data"] = _parsePlayerInfo(connection, move(data));
+        room->publish(2, move(message), play->getSidsMap()->begin()->second);
+
+        response["message"] = "OK";
+        response["action"] = 2;
+        response["data"]["ready"] = play->getReady();
+        response["data"]["histories"] = room->getHistory(0, 10);
+        response["data"]["players"] = room->getPlayers();
+        connection->send(WebSocket::fromJson(response));
+        return;
+    }
+    throw out_of_range("Room not found");
+}
+
+void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
+    {
+        shared_lock<shared_mutex> lock(_sharedMutex);
+        auto iter = _idsMap.find(id);
+        if (iter == _idsMap.end()) {
+            throw out_of_range("Room not found");
+        }
+        auto room = iter->second;
+        iter->second->unsubscribe(connection);
+        if (!iter->second->isEmpty()) {
+            Json::Value message, response;
+            message["message"] = "Broadcast";
+            message["action"] = 3;
+            message["data"] = _parsePlayerInfo(connection, Json::objectValue); // TODO: Remove unnecessary items.
+            room->publish(3, move(message));
+
+            response["message"] = "OK";
+            response["action"] = 3;
+            connection->send(WebSocket::fromJson(response));
+            return;
+        }
+    }
+    unique_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(id);
+    if (iter->second->isEmpty()) {
+        _idsMap.erase(iter);
+    }
+}
+
+void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value &&data) {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(rid);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        if (action == 4) {
+            data["time"] = Utils::fromDate();
+        }
+        Json::Value response;
+        response["message"] = "Server";
+        response["action"] = action;
+        response["data"] = move(data);
+        room->publish(action, move(response));
+    }
+    throw out_of_range("Room not found");
+}
+
+void PlayManager::publish(
+        const string &rid,
+        const WebSocketConnectionPtr &connection,
+        const uint64_t &action,
+        Json::Value &&data
+) {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(rid);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        data["time"] = Utils::fromDate();
+        Json::Value response;
+        response["message"] = "Broadcast";
+        response["action"] = action;
+        response["data"] = _parsePlayerInfo(connection, move(data));
+        room->publish(action, move(response));
+    }
+    throw out_of_range("Room not found");
+}
+
+void PlayManager::publish(
+        const string &rid,
+        const WebSocketConnectionPtr &connection,
+        const uint64_t &action,
+        Json::Value &&data,
+        const uint64_t &excluded
+) {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    auto iter = _idsMap.find(rid);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        Json::Value response;
+        response["message"] = "Broadcast";
+        response["action"] = action;
+        response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
+        room->publish(action, move(response), excluded);
+    }
+    throw out_of_range("Room not found");
+}
+
+void PlayManager::changeConfig(
+        const string &rid,
+        string &&config,
+        const WebSocketConnectionPtr &connection
+) {
+    auto play = connection->getContext<Play>();
+    Json::Value data;
+    data["config"] = config;
+    play->setConfig(move(config));
+    publish(rid, connection, 5, move(data), play->getSidsMap()->begin()->second);
+}
+
+void PlayManager::changeReady(
+        const string &rid,
+        const bool &ready,
+        const WebSocketConnectionPtr &connection
+) {
+    auto play = connection->getContext<Play>();
+    Json::Value data;
+    data["ready"] = ready;
+    play->setReady(ready);
+    publish(rid, connection, 6, move(data), play->getSidsMap()->begin()->second);
+    _checkReady(rid);
+}
+
+Json::Value PlayManager::parseInfo(
+        const string &type,
+        const unsigned int &begin,
+        const unsigned int &count
+) const {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    Json::Value info(Json::arrayValue);
+    if (begin < _idsMap.size()) {
+        unsigned int counter = 0;
+        for (const auto &pair : _idsMap) {
+            if (counter < begin) {
+                ++counter;
+                continue;
+            }
+            if (counter >= begin + count) {
+                break;
+            }
+            if (type.empty() || type == pair.second->getType()) {
+                info.append(pair.second->parseInfo());
+            }
+            ++counter;
+        }
+    }
+    return info;
+}
+
+Json::Value PlayManager::_parsePlayerInfo(
+        const WebSocketConnectionPtr &connection,
+        Json::Value &&data
+) {
+    auto play = connection->getContext<Play>();
+    auto info = play->getInfo();
+    data["sid"] = play->getSidsMap()->begin()->second;
+    data["uid"] = info->getValueOfId();
+    data["username"] = info->getValueOfId();
+    return data;
+}
+
+void PlayManager::_checkReady(const std::string &rid) {
+    shared_lock<shared_mutex> lock(_sharedMutex);
+    bool allReady = true;
+    auto iter = _idsMap.find(rid);
+    if (iter != _idsMap.end()) {
+        auto room = iter->second;
+        if (room->getPendingStart()) {
+            return;
+        }
+        auto players = room->getPlayers();
+        for (auto player : players) {
+            if (!player["ready"]) {
+                allReady = false;
+                break;
+            }
+        }
+        if (allReady) {
+            room->setPendingStart(true);
+            Json::Value response;
+            response["message"] = "Server";
+            response["action"] = 7;
+            room->publish(7, move(response));
+
+            thread([room]() {
+                for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
+                    this_thread::sleep_for(chrono::milliseconds(10));
+                    auto players = room->getPlayers();
+                    bool allReady = true;
+                    for (auto player : players) {
+                        if (!player["ready"]) {
+                            allReady = false;
+                            break;
+                        }
+                    }
+                    if (!allReady) {
+                        room->setPendingStart(false);
+                        return;
+                    }
+                }
+                Json::Value response;
+                response["message"] = "Server";
+                response["action"] = 8;
+                response["data"]["rid"] = Crypto::blake2b(drogon::utils::getUuid(), 1);
+                room->publish(8, move(response));
+                room->setPendingStart(false);
+                room->setStart(true);
+            }).detach();
+        }
+        return;
+    }
+    throw out_of_range("Channel not found");
 }

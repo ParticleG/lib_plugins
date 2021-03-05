@@ -5,57 +5,78 @@
 #pragma once
 
 #include <drogon/plugins/Plugin.h>
-#include <structures/Room.h>
-#include <structures/RoomManager.h>
-#include <utils/Utils.h>
+#include <structures/BaseManager.h>
+#include <structures/PlayRoom.h>
 
-namespace tech::plugin {
-    class PlayManager : public drogon::Plugin<PlayManager> {
+namespace tech ::plugins {
+    class PlayManager :
+            public tech::structures::BaseManager<tech::structures::PlayRoom>,
+            public drogon::Plugin<PlayManager> {
     public:
-        PlayManager() {}
-
         virtual void initAndStart(const Json::Value &config) override;
 
         virtual void shutdown() override;
 
-        Json::Value createRoom(const std::string &roomID, const std::string &name, const std::string &password,
-                               const std::string &roomType);
+        uint64_t getCapacity(const std::string &type) const;
 
-        drogon::SubscriberID subscribe(const std::string &roomID, const tech::structures::RoomManager::MessageHandler &handler, const std::shared_ptr<tech::structures::Player> &player);
+        void subscribe(
+                const std::string &id,
+                const std::string &password,
+                const drogon::WebSocketConnectionPtr &connection
+        );
 
-        void unsubscribe(const std::string &roomID, const drogon::SubscriberID &playerID);
+        void unsubscribe(
+                const std::string &id,
+                const drogon::WebSocketConnectionPtr &connection
+        ) override;
 
-        bool checkPassword(const std::string &roomID, const std::string &password);
+        void publish(
+                const std::string &rid,
+                const uint64_t &action,
+                Json::Value &&data
+        );
 
-        void startGame(const std::string &roomID);
+        void publish(
+                const std::string &rid,
+                const drogon::WebSocketConnectionPtr &connection,
+                const uint64_t &action,
+                Json::Value &&data
+        );
 
-        void changeGroup(const std::string &roomID, drogon::SubscriberID id, const unsigned int &group);
+        void publish(
+                const std::string &rid,
+                const drogon::WebSocketConnectionPtr &connection,
+                const uint64_t &action,
+                Json::Value &&data,
+                const uint64_t &excluded
+        );
 
-        void setDead(const std::string &roomID, drogon::SubscriberID id);
+        void changeConfig(
+                const std::string &rid,
+                std::string &&config,
+                const drogon::WebSocketConnectionPtr &connection
+        );
 
-        uint64_t endGame(const std::string &roomID);
+        void changeReady(
+                const std::string &rid,
+                const bool &ready,
+                const drogon::WebSocketConnectionPtr &connection
+        );
 
-        void publish(const std::string &roomID, const std::string &message);
-
-        void publish(const std::string &roomID, const std::string &message, const drogon::SubscriberID &excludedID) const;
-
-        [[maybe_unused]] void tell(const std::string &roomID, const std::string &message, const drogon::SubscriberID &targetID) const;
-
-        bool checkReadyState(const std::string &roomID);
-
-        bool setReadyState(const std::string &roomID, const bool &isReady);
-
-        std::string getInfos(const std::string &roomID);
-
-        [[maybe_unused]] size_t size();
-
-        Json::Value getRoomList();
-
-        Json::Value getRoomList(const std::string &roomType);
+        Json::Value parseInfo(
+                const std::string &type,
+                const unsigned int &begin,
+                const unsigned int &count
+        ) const;
 
     private:
-        std::unordered_map<std::string, uint64_t> _roomTypes;
-        std::unique_ptr<tech::structures::RoomManager> _roomManager;
-        mutable std::shared_mutex _sharedMutex;
+        std::unordered_map<std::string, uint64_t> _typesMap{};
+
+        static Json::Value _parsePlayerInfo(
+                const drogon::WebSocketConnectionPtr &connection,
+                Json::Value &&data
+        );
+
+        void _checkReady(const std::string &rid);
     };
 }
