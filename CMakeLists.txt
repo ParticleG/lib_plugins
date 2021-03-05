@@ -26,6 +26,13 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../lib_structures lib_structures)
 
 add_library(${PROJECT_NAME} STATIC)
 
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/app APP_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/base BASE_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/chat CHAT_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/play PLAY_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/stream STREAM_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/user USER_SRC)
+
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/plugins PLUGIN_SRC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC STRUCTURES_LIB)
@@ -33,4 +40,11 @@ target_link_libraries(${PROJECT_NAME} PUBLIC STRUCTURES_LIB)
 target_include_directories(${PROJECT_NAME} PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 
-target_sources(${PROJECT_NAME} PUBLIC ${PLUGIN_SRC})
+target_sources(${PROJECT_NAME} PUBLIC
+        ${APP_SRC}
+        ${BASE_SRC}
+        ${CHAT_SRC}
+        ${PLAY_SRC}
+        ${STREAM_SRC}
+        ${USER_SRC}
+        ${PLUGIN_SRC})
