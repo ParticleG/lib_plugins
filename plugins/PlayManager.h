@@ -8,7 +8,7 @@
 #include <structures/BaseManager.h>
 #include <structures/PlayRoom.h>
 
-namespace tech ::plugins {
+namespace tech::plugins {
     class PlayManager :
             public tech::structures::BaseManager<tech::structures::PlayRoom>,
             public drogon::Plugin<PlayManager> {

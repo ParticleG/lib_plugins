@@ -31,6 +31,7 @@ using namespace std;
 HandlerManager::HandlerManager() : _handlerFactory(tech::structures::HandlerFactory<tech::strategies::MessageHandler>::instance()) {}
 
 void HandlerManager::initAndStart(const Json::Value &config) {
+    LOG_INFO << "Initializing HandlerManager...";
     if (!(
             config.isMember("App") && config["App"].isInt() &&
             config.isMember("User") && config["User"].isInt() &&

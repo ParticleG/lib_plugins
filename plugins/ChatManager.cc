@@ -12,6 +12,7 @@ using namespace drogon;
 using namespace std;
 
 void ChatManager::initAndStart(const Json::Value &config) {
+    LOG_INFO << "Initializing ChatManager...";
     if (config.isMember("channels") && config["channels"].isArray()) {
         for (auto &channel : config["channels"]) {
             if (
@@ -24,7 +25,7 @@ void ChatManager::initAndStart(const Json::Value &config) {
                         channel["capacity"].asUInt64(),
                         channel["historyCount"].asUInt())));
             } else {
-                LOG_ERROR << R"(Requires string value "id" and UInt64 type "capacity" in config['channels'])";
+                LOG_ERROR << R"(Requires string value "id", UInt64 type "capacity", UInt64 type "historyCount" in config['channels'])";
                 abort();
             }
         }

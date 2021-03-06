@@ -7,6 +7,7 @@
 using namespace tech::plugins;
 
 void Configurator::initAndStart(const Json::Value &config) {
+    LOG_INFO << "Initializing Configurator...";
     if (config.isMember("auth_token_expire_time") && config["access_token_expire_time"].isUInt()) {
         _authTokenExpireTime = config["auth_token_expire_time"].asUInt();
     } else {

@@ -12,7 +12,9 @@ using namespace tech::utils;
 using namespace drogon;
 using namespace std;
 
-void StreamManager::initAndStart(const Json::Value &config) {}
+void StreamManager::initAndStart(const Json::Value &config) {
+    LOG_INFO << "Initializing StreamManager...";
+}
 
 void StreamManager::shutdown() {
     /// Shutdown the plugin

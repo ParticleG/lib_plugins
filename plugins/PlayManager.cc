@@ -13,6 +13,7 @@ using namespace drogon;
 using namespace std;
 
 void PlayManager::initAndStart(const Json::Value &config) {
+    LOG_INFO << "Initializing PlayManager...";
     if (config.isMember("typeList") && config["typeList"].isArray()) {
         for (auto &type : config["typeList"]) {
             if (

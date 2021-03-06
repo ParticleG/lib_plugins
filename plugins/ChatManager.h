@@ -8,7 +8,7 @@
 #include <structures/BaseManager.h>
 #include <structures/ChatRoom.h>
 
-namespace tech ::plugins {
+namespace tech::plugins {
     class ChatManager :
             public tech::structures::BaseManager<tech::structures::ChatRoom>,
             public drogon::Plugin<ChatManager> {
