@@ -102,6 +102,11 @@ void StreamManager::publish(
     auto iter = _idsMap.find(rid);
     if (iter != _idsMap.end()) {
         auto room = iter->second;
+
+        if (action == 3) {
+            connection->getContext<Stream>()->setPlace(room->generatePlace());
+        }
+
         Json::Value response;
         response["message"] = "Broadcast";
         response["action"] = action;
