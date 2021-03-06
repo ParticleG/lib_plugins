@@ -20,10 +20,11 @@ void Configurator::initAndStart(const Json::Value &config) {
         LOG_ERROR << R"(Requires unsigned int value "access_token_expire_time" in plugin Configurator's config')";
         abort();
     }
+    LOG_INFO << "Configurator loaded.";
 }
 
 void Configurator::shutdown() {
-    /// Shutdown the plugin
+    LOG_INFO << "Configurator shutdown.";
 }
 
 uint64_t Configurator::getAuthExpire() const {

@@ -14,10 +14,11 @@ using namespace std;
 
 void StreamManager::initAndStart(const Json::Value &config) {
     LOG_INFO << "Initializing StreamManager...";
+    LOG_INFO << "StreamManager loaded.";
 }
 
 void StreamManager::shutdown() {
-    /// Shutdown the plugin
+    LOG_INFO << "StreamManager shutdown.";
 }
 
 void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connection) {
@@ -26,6 +27,9 @@ void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connectio
         auto iter = _idsMap.find(id);
         if (iter != _idsMap.end()) {
             auto room = iter->second;
+            if (room->getStart()) {
+                throw invalid_argument("Room already started");
+            }
             room->subscribe(connection);
 
             Json::Value message;
@@ -41,6 +45,9 @@ void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connectio
     auto iter = _idsMap.find(id);
     if (iter != _idsMap.end()) {
         auto room = iter->second;
+        if (room->getStart()) {
+            throw invalid_argument("Room already started");
+        }
         room->subscribe(connection);
 
         Json::Value message;
@@ -66,15 +73,15 @@ void StreamManager::unsubscribe(const string &id, const WebSocketConnectionPtr &
         if (!iter->second->isEmpty()) {
             Json::Value message, response;
             message["message"] = "Broadcast";
-            message["action"] = 2;
-            message["rid"] = id;
+            message["action"] = 5;
             message["data"] = _parsePlayerInfo(connection, Json::objectValue);
             room->publish(move(message));
 
-            response["message"] = "OK";
-            response["action"] = 2;
-            response["rid"] = id;
-            connection->send(WebSocket::fromJson(response));
+            if (connection->connected()) {
+                response["message"] = "OK";
+                response["action"] = 5;
+                connection->send(WebSocket::fromJson(response));
+            }
             return;
         }
     }
@@ -156,6 +163,7 @@ void StreamManager::_checkReady(const std::string &rid) {
         if (allReady) {
             thread([room]() {
                 this_thread::sleep_for(chrono::seconds(1));
+                room->setStart(true);
                 Json::Value response;
                 response["message"] = "Server";
                 response["action"] = 1;
@@ -176,15 +184,19 @@ void StreamManager::_checkFinished(const string &rid) {
             auto room = iter->second;
             thread([rid, room]() {
                 this_thread::sleep_for(chrono::seconds(3));
-                auto playManager = app().getPlugin<PlayManager>();
                 Json::Value response, result;
                 response["message"] = "Server";
                 response["action"] = 4;
                 room->publish(move(response));
 
+                auto playManager = app().getPlugin<PlayManager>();
                 result["start"] = false;
                 result["result"] = room->getDeaths();
                 playManager->publish(rid, 9, move(result));
+
+                this_thread::sleep_for(chrono::seconds(3));
+                auto streamManager = app().getPlugin<StreamManager>();
+                streamManager->removeRoom(rid); // TODO: Check if is websocket friendly.
             }).detach();
         }
         return;

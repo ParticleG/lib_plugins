@@ -33,10 +33,11 @@ void ChatManager::initAndStart(const Json::Value &config) {
         LOG_ERROR << R"(Requires array value "channels" in plugin ChatManager's config')";
         abort();
     }
+    LOG_INFO << "ChatManager loaded.";
 }
 
 void ChatManager::shutdown() {
-    /// Shutdown the plugin
+    LOG_INFO << "ChatManager shutdown.";
 }
 
 void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection) {
@@ -101,10 +102,12 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
     message["data"] = _getPlayerInfo(connection);
     room->publish(move(message));
 
-    response["message"] = "OK";
-    response["action"] = 2;
-    response["rid"] = id;
-    connection->send(WebSocket::fromJson(response));
+    if (connection->connected()) {
+        response["message"] = "OK";
+        response["action"] = 2;
+        response["rid"] = id;
+        connection->send(WebSocket::fromJson(response));
+    }
 }
 
 void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &connection, const string &message) {

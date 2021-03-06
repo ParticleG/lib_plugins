@@ -19,6 +19,8 @@ namespace tech::plugins {
 
         uint64_t getCapacity(const std::string &type) const;
 
+        void subscribe(const std::string &rid, drogon::WebSocketConnectionPtr connection) override {}
+
         void subscribe(
                 const std::string &id,
                 const std::string &password,

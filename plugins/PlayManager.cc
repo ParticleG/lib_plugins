@@ -30,10 +30,11 @@ void PlayManager::initAndStart(const Json::Value &config) {
         LOG_ERROR << R"(Requires array value "channels" in plugin ChatManager's config')";
         abort();
     }
+    LOG_INFO << "PlayManager loaded.";
 }
 
 void PlayManager::shutdown() {
-    /// Shutdown the plugin
+    LOG_INFO << "PlayManager shutdown.";
 }
 
 uint64_t PlayManager::getCapacity(const string &type) const {
@@ -87,6 +88,9 @@ void PlayManager::subscribe(
     auto iter = _idsMap.find(id);
     if (iter != _idsMap.end()) {
         auto room = iter->second;
+        if (room->getStart()) {
+            throw invalid_argument("Room already started");
+        }
         if (!room->checkPassword(password)) {
             throw invalid_argument("Password is incorrect");
         }
@@ -131,9 +135,11 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
             message["data"] = _parsePlayerInfo(connection, Json::objectValue); // TODO: Remove unnecessary items.
             room->publish(3, move(message));
 
-            response["message"] = "OK";
-            response["action"] = 3;
-            connection->send(WebSocket::fromJson(response));
+            if (connection->connected()) {
+                response["message"] = "OK";
+                response["action"] = 3;
+                connection->send(WebSocket::fromJson(response));
+            }
             return;
         }
     }

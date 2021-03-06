@@ -68,9 +68,12 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     auto streamPrefix = config["Stream"].asInt() * 10;
     static HandlerRegistrar<MessageHandler, PublishStreamData> publishStreamDataRegistrar(streamPrefix + 2);
     static HandlerRegistrar<MessageHandler, PublishDeathData> publishDeathData(streamPrefix + 3);
+    LOG_INFO << "HandlerManager loaded.";
 }
 
-void HandlerManager::shutdown() {}
+void HandlerManager::shutdown() {
+    LOG_INFO << "HandlerManager shutdown.";
+}
 
 CloseCode HandlerManager::process(
         const WebSocketConnectionPtr &wsConnPtr,
