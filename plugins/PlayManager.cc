@@ -84,38 +84,6 @@ void PlayManager::subscribe(
             return;
         }
     }
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(id);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        if (room->getStart()) {
-            throw invalid_argument("Room already started");
-        }
-        if (!room->checkPassword(password)) {
-            throw invalid_argument("Password is incorrect");
-        }
-        room->subscribe(connection);
-        auto play = connection->getContext<Play>();
-
-        play->setReady(false);
-
-        Json::Value data, message, response;
-        data["config"] = play->getConfig();
-        data["ready"] = play->getReady();
-
-        message["message"] = "Broadcast";
-        message["action"] = 2;
-        message["data"] = _parsePlayerInfo(connection, move(data));
-        room->publish(2, move(message), play->getSidsMap()->begin()->second);
-
-        response["message"] = "OK";
-        response["action"] = 2;
-        response["data"]["ready"] = play->getReady();
-        response["data"]["histories"] = room->getHistory(0, 10);
-        response["data"]["players"] = room->getPlayers();
-        connection->send(WebSocket::fromJson(response));
-        return;
-    }
     throw out_of_range("Room not found");
 }
 

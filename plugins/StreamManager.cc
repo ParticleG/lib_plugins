@@ -41,23 +41,6 @@ void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connectio
             return;
         }
     }
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(id);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        if (room->getStart()) {
-            throw invalid_argument("Room already started");
-        }
-        room->subscribe(connection);
-
-        Json::Value message;
-        message["message"] = "Broadcast";
-        message["action"] = 0;
-        message["data"] = _parsePlayerInfo(connection, Json::objectValue);
-        room->publish(move(message));
-        _checkReady(id);
-        return;
-    }
     throw out_of_range("Room not found");
 }
 

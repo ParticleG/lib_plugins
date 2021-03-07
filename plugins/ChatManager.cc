@@ -63,26 +63,6 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
             return;
         }
     }
-    unique_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(id);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        room->subscribe(connection);
-
-        Json::Value message, response;
-        message["message"] = "Broadcast";
-        message["action"] = 1;
-        message["rid"] = id;
-        message["data"] = _getPlayerInfo(connection);
-        room->publish(move(message));
-
-        response["message"] = "OK";
-        response["action"] = 1;
-        response["rid"] = id;
-        response["data"] = room->getHistory(0, 20);
-        connection->send(WebSocket::fromJson(response));
-        return;
-    }
     throw out_of_range("Room not found");
 }
 
