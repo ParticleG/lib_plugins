@@ -211,54 +211,48 @@ Json::Value PlayManager::_parsePlayerInfo(
 }
 
 void PlayManager::_checkReady(const std::string &rid) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
+    auto room = getRoom(rid);
     bool allReady = true;
-    auto iter = _idsMap.find(rid);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        if (room->getPendingStart()) {
-            return;
-        }
-        auto players = room->getPlayers();
-        for (auto player : players) {
-            if (!player["ready"]) {
-                allReady = false;
-                break;
-            }
-        }
-        if (allReady) {
-            room->setPendingStart(true);
-            Json::Value response;
-            response["message"] = "Server";
-            response["action"] = 7;
-            room->publish(7, move(response));
-
-            thread([room]() {
-                for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
-                    this_thread::sleep_for(chrono::milliseconds(10));
-                    auto players = room->getPlayers();
-                    bool allReady = true;
-                    for (auto player : players) {
-                        if (!player["ready"]) {
-                            allReady = false;
-                            break;
-                        }
-                    }
-                    if (!allReady) {
-                        room->setPendingStart(false);
-                        return;
-                    }
-                }
-                Json::Value response;
-                response["message"] = "Server";
-                response["action"] = 8;
-                response["data"]["rid"] = Crypto::blake2b(drogon::utils::getUuid(), 1);
-                room->publish(8, move(response));
-                room->setPendingStart(false);
-                room->setStart(true);
-            }).detach();
-        }
+    if (room->getPendingStart()) {
         return;
     }
-    throw out_of_range("Channel not found");
+    auto players = room->getPlayers();
+    for (auto player : players) {
+        if (!player["ready"]) {
+            allReady = false;
+            break;
+        }
+    }
+    if (allReady) {
+        room->setPendingStart(true);
+        Json::Value response;
+        response["message"] = "Server";
+        response["action"] = 7;
+        room->publish(7, move(response));
+
+        thread([room]() {
+            for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
+                this_thread::sleep_for(chrono::milliseconds(10));
+                auto players = room->getPlayers();
+                bool allReady = true;
+                for (auto player : players) {
+                    if (!player["ready"]) {
+                        allReady = false;
+                        break;
+                    }
+                }
+                if (!allReady) {
+                    room->setPendingStart(false);
+                    return;
+                }
+            }
+            Json::Value response;
+            response["message"] = "Server";
+            response["action"] = 8;
+            response["data"]["rid"] = Crypto::blake2b(drogon::utils::getUuid(), 1);
+            room->publish(8, move(response));
+            room->setPendingStart(false);
+            room->setStart(true);
+        }).detach();
+    }
 }
