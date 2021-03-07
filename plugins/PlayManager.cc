@@ -50,53 +50,40 @@ void PlayManager::subscribe(
         const string &password,
         const WebSocketConnectionPtr &connection
 ) {
-    {
-        shared_lock<shared_mutex> lock(_sharedMutex);
-        auto iter = _idsMap.find(id);
-        if (iter != _idsMap.end()) {
-            auto room = iter->second;
-            if (room->getStart()) {
-                throw invalid_argument("Room already started");
-            }
-            if (!room->checkPassword(password)) {
-                throw invalid_argument("Password is incorrect");
-            }
-            room->subscribe(connection);
-            auto play = connection->getContext<Play>();
-
-            play->setReady(false);
-
-            Json::Value data, message, response;
-            data["config"] = play->getConfig();
-            data["ready"] = play->getReady();
-
-            message["message"] = "Broadcast";
-            message["action"] = 2;
-            message["data"] = _parsePlayerInfo(connection, move(data));
-            room->publish(2, move(message), play->getSidsMap()->begin()->second);
-
-            response["message"] = "OK";
-            response["action"] = 2;
-            response["data"]["ready"] = play->getReady();
-            response["data"]["histories"] = room->getHistory(0, 10);
-            response["data"]["players"] = room->getPlayers();
-            connection->send(WebSocket::fromJson(response));
-            return;
-        }
+    auto room = getRoom(id);
+    if (room->getStart()) {
+        throw invalid_argument("Room already started");
     }
-    throw out_of_range("Room not found");
+    if (!room->checkPassword(password)) {
+        throw invalid_argument("Password is incorrect");
+    }
+    room->subscribe(connection);
+    auto play = connection->getContext<Play>();
+
+    play->setReady(false);
+
+    Json::Value data, message, response;
+    data["config"] = play->getConfig();
+    data["ready"] = play->getReady();
+
+    message["message"] = "Broadcast";
+    message["action"] = 2;
+    message["data"] = _parsePlayerInfo(connection, move(data));
+    room->publish(2, move(message), play->getSidsMap()->begin()->second);
+
+    response["message"] = "OK";
+    response["action"] = 2;
+    response["data"]["ready"] = play->getReady();
+    response["data"]["histories"] = room->getHistory(0, 10);
+    response["data"]["players"] = room->getPlayers();
+    connection->send(WebSocket::fromJson(response));
 }
 
 void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
     {
-        shared_lock<shared_mutex> lock(_sharedMutex);
-        auto iter = _idsMap.find(id);
-        if (iter == _idsMap.end()) {
-            throw out_of_range("Room not found");
-        }
-        auto room = iter->second;
-        iter->second->unsubscribe(connection);
-        if (!iter->second->isEmpty()) {
+        auto room = getRoom(id);
+        room->unsubscribe(connection);
+        if (!room->isEmpty()) {
             Json::Value message, response;
             message["message"] = "Broadcast";
             message["action"] = 3;
@@ -119,20 +106,15 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
 }
 
 void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value &&data) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(rid);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        if (action == 4) {
-            data["time"] = Utils::fromDate();
-        }
-        Json::Value response;
-        response["message"] = "Server";
-        response["action"] = action;
-        response["data"] = move(data);
-        room->publish(action, move(response));
+    auto room = getRoom(rid);
+    if (action == 4) {
+        data["time"] = Utils::fromDate();
     }
-    throw out_of_range("Room not found");
+    Json::Value response;
+    response["message"] = "Server";
+    response["action"] = action;
+    response["data"] = move(data);
+    room->publish(action, move(response));
 }
 
 void PlayManager::publish(
@@ -141,18 +123,13 @@ void PlayManager::publish(
         const uint64_t &action,
         Json::Value &&data
 ) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(rid);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        data["time"] = Utils::fromDate();
-        Json::Value response;
-        response["message"] = "Broadcast";
-        response["action"] = action;
-        response["data"] = _parsePlayerInfo(connection, move(data));
-        room->publish(action, move(response));
-    }
-    throw out_of_range("Room not found");
+    auto room = getRoom(rid);
+    data["time"] = Utils::fromDate();
+    Json::Value response;
+    response["message"] = "Broadcast";
+    response["action"] = action;
+    response["data"] = _parsePlayerInfo(connection, move(data));
+    room->publish(action, move(response));
 }
 
 void PlayManager::publish(
@@ -162,17 +139,12 @@ void PlayManager::publish(
         Json::Value &&data,
         const uint64_t &excluded
 ) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(rid);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        Json::Value response;
-        response["message"] = "Broadcast";
-        response["action"] = action;
-        response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
-        room->publish(action, move(response), excluded);
-    }
-    throw out_of_range("Room not found");
+    auto room = getRoom(rid);
+    Json::Value response;
+    response["message"] = "Broadcast";
+    response["action"] = action;
+    response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
+    room->publish(action, move(response), excluded);
 }
 
 void PlayManager::changeConfig(

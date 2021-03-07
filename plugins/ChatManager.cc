@@ -41,38 +41,25 @@ void ChatManager::shutdown() {
 }
 
 void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection) {
-    {
-        shared_lock<shared_mutex> lock(_sharedMutex);
-        auto iter = _idsMap.find(id);
-        if (iter != _idsMap.end()) {
-            auto room = iter->second;
-            room->subscribe(connection);
+    auto room = getRoom(id);
+    room->subscribe(connection);
 
-            Json::Value message, response;
-            message["message"] = "Broadcast";
-            message["action"] = 1;
-            message["rid"] = id;
-            message["data"] = _getPlayerInfo(connection);
-            room->publish(move(message));
+    Json::Value message, response;
+    message["message"] = "Broadcast";
+    message["action"] = 1;
+    message["rid"] = id;
+    message["data"] = _getPlayerInfo(connection);
+    room->publish(move(message));
 
-            response["message"] = "OK";
-            response["action"] = 1;
-            response["rid"] = id;
-            response["data"] = room->getHistory(0, 20);
-            connection->send(WebSocket::fromJson(response));
-            return;
-        }
-    }
-    throw out_of_range("Room not found");
+    response["message"] = "OK";
+    response["action"] = 1;
+    response["rid"] = id;
+    response["data"] = room->getHistory(0, 20);
+    connection->send(WebSocket::fromJson(response));
 }
 
 void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(id);
-    if (iter == _idsMap.end()) {
-        throw out_of_range("Room not found");
-    }
-    auto room = iter->second;
+    auto room = getRoom(id);
     room->unsubscribe(connection);
 
     Json::Value message, response;
@@ -91,18 +78,13 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
 }
 
 void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &connection, const string &message) {
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _idsMap.find(rid);
-    if (iter != _idsMap.end()) {
-        auto room = iter->second;
-        Json::Value response;
-        response["message"] = "Broadcast";
-        response["action"] = 3;
-        response["rid"] = rid;
-        response["data"]["histories"] = _getPlayerInfo(connection, message);
-        room->publish(move(response));
-    }
-    throw out_of_range("Channel not found");
+    auto room = getRoom(rid);
+    Json::Value response;
+    response["message"] = "Broadcast";
+    response["action"] = 3;
+    response["rid"] = rid;
+    response["data"]["histories"] = _getPlayerInfo(connection, message);
+    room->publish(move(response));
 }
 
 Json::Value ChatManager::parseInfo() const {
