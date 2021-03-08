@@ -45,7 +45,7 @@ namespace tech ::plugins {
                 Json::Value &&data
         );
 
-        void _checkReady(const std::string &rid);
+        void _checkReady(RoomWithLock &&room);
 
         void _checkFinished(const std::string &rid);
     };

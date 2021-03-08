@@ -33,7 +33,7 @@ void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connectio
     message["action"] = 0;
     message["data"] = _parsePlayerInfo(connection, Json::objectValue);
     room->publish(move(message));
-    _checkReady(id);
+    _checkReady(move(room));
 }
 
 void StreamManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
@@ -116,9 +116,8 @@ Json::Value StreamManager::_parsePlayerInfo(
     return data;
 }
 
-void StreamManager::_checkReady(const std::string &rid) {
+void StreamManager::_checkReady(RoomWithLock &&room) {
     bool allReady = true;
-    auto room = getRoom(rid);
     if (!room->isFull()) {
         allReady = false;
     }
