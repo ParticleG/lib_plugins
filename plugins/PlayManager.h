@@ -13,9 +13,9 @@ namespace tech::plugins {
             public tech::structures::BaseManager<tech::structures::PlayRoom>,
             public drogon::Plugin<PlayManager> {
     public:
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
         uint64_t getCapacity(const std::string &type) const;
 

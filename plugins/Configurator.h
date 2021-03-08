@@ -11,9 +11,9 @@ namespace tech::plugins {
     public:
         Configurator() {}
 
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
         uint64_t getAuthExpire() const;
 
