@@ -13,9 +13,9 @@ namespace tech ::plugins {
             public tech::structures::BaseManager<tech::structures::StreamRoom>,
             public drogon::Plugin<StreamManager> {
     public:
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
 
         void subscribe(const std::string &id, drogon::WebSocketConnectionPtr connection) override;
