@@ -57,7 +57,7 @@ void StreamManager::unsubscribe(const string &id, const WebSocketConnectionPtr &
     }
     unique_lock<shared_mutex> lock(_sharedMutex);
     auto iter = _idsMap.find(id);
-    if (iter->second->isEmpty()) {
+    if (iter->second.isEmpty()) {
         _idsMap.erase(iter);
     }
 }
@@ -103,7 +103,7 @@ Json::Value StreamManager::parseInfo() const {
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
     for (const auto &pair : _idsMap) {
-        info.append(pair.second->parseInfo());
+        info.append(pair.second.parseInfo());
     }
     return info;
 }
@@ -123,7 +123,7 @@ void StreamManager::_checkReady(const std::string &rid) {
         allReady = false;
     }
     if (allReady) {
-        thread([room]() {
+        thread([room{move(room)}]() { // TODO: is room safe here?
             this_thread::sleep_for(chrono::seconds(1));
             room->setStart(true);
             Json::Value response;
@@ -138,7 +138,7 @@ void StreamManager::_checkReady(const std::string &rid) {
 void StreamManager::_checkFinished(const string &rid) {
     auto room = getRoom(rid);
     if (room->checkFinished()) {
-        thread([rid, room]() {
+        thread([rid, room{move(room)}]() { // TODO: is room safe here?
             this_thread::sleep_for(chrono::seconds(3));
             Json::Value response, result;
             response["message"] = "Server";

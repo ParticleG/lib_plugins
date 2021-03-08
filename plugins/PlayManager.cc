@@ -100,7 +100,7 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
     }
     unique_lock<shared_mutex> lock(_sharedMutex);
     auto iter = _idsMap.find(id);
-    if (iter->second->isEmpty()) {
+    if (iter->second.isEmpty()) {
         _idsMap.erase(iter);
     }
 }
@@ -189,8 +189,8 @@ Json::Value PlayManager::parseInfo(
             if (counter >= begin + count) {
                 break;
             }
-            if (type.empty() || type == pair.second->getType()) {
-                info.append(pair.second->parseInfo());
+            if (type.empty() || type == pair.second.getType()) {
+                info.append(pair.second.parseInfo());
             }
             ++counter;
         }
@@ -230,7 +230,7 @@ void PlayManager::_checkReady(const std::string &rid) {
         response["action"] = 7;
         room->publish(7, move(response));
 
-        thread([room]() {
+        thread([room{move(room)}]() { // is room safe here?
             for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
                 this_thread::sleep_for(chrono::milliseconds(10));
                 auto players = room->getPlayers();
