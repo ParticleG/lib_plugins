@@ -72,6 +72,9 @@ namespace tech::plugins {
         ) const;
 
     private:
+
+        static std::shared_ptr<tech::structures::Play> _getPlay(const drogon::WebSocketConnectionPtr &connection);
+
         std::unordered_map<std::string, uint64_t> _typesMap{};
 
         void _checkReady(const std::string &rid);

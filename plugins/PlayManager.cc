@@ -58,7 +58,7 @@ void PlayManager::subscribe(
         throw invalid_argument("Password is incorrect");
     }
     room->subscribe(connection);
-    auto play = connection->getContext<Play>();
+    auto play = _getPlay(connection);
 
     play->setReady(false);
 
@@ -87,7 +87,7 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
             Json::Value message, response;
             message["message"] = "Broadcast";
             message["action"] = 3;
-            message["data"] = connection->getContext<Play>()->parsePlayerInfo(Json::objectValue); // TODO: Remove unnecessary items.
+            message["data"] = _getPlay(connection)->parsePlayerInfo(Json::objectValue); // TODO: Remove unnecessary items.
             room->publish(3, move(message));
 
             if (connection->connected()) {
@@ -128,7 +128,7 @@ void PlayManager::publish(
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = connection->getContext<Play>()->parsePlayerInfo(move(data));
+    response["data"] = _getPlay(connection)->parsePlayerInfo(move(data));
     room->publish(action, move(response));
 }
 
@@ -143,7 +143,7 @@ void PlayManager::publish(
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = connection->getContext<Play>()->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
+    response["data"] = _getPlay(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     room->publish(action, move(response), excluded);
 }
 
@@ -152,7 +152,7 @@ void PlayManager::changeConfig(
         string &&config,
         const WebSocketConnectionPtr &connection
 ) {
-    auto play = connection->getContext<Play>();
+    auto play = _getPlay(connection);
     Json::Value data;
     data["config"] = config;
     play->setConfig(move(config));
@@ -164,7 +164,7 @@ void PlayManager::changeReady(
         const bool &ready,
         const WebSocketConnectionPtr &connection
 ) {
-    auto play = connection->getContext<Play>();
+    auto play = _getPlay(connection);
     Json::Value data;
     data["ready"] = ready;
     play->setReady(ready);
@@ -196,6 +196,10 @@ Json::Value PlayManager::parseInfo(
         }
     }
     return info;
+}
+
+shared_ptr<Play> PlayManager::_getPlay(const drogon::WebSocketConnectionPtr &connection) {
+    return connection->getContext<Play>();
 }
 
 void PlayManager::_checkReady(const std::string &rid) {
