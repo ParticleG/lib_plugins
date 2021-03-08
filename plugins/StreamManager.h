@@ -40,11 +40,9 @@ namespace tech ::plugins {
         Json::Value parseInfo() const;
 
     private:
-        static Json::Value _parsePlayerInfo(
-                const drogon::WebSocketConnectionPtr &connection,
-                Json::Value &&data
-        );
 
+        static std::shared_ptr<tech::structures::Stream> _getStream(const drogon::WebSocketConnectionPtr &connection);
+        
         void _checkReady(RoomWithLock &&room);
 
         void _checkFinished(RoomWithLock &&room);

@@ -31,7 +31,7 @@ void StreamManager::subscribe(const string &id, WebSocketConnectionPtr connectio
     Json::Value message;
     message["message"] = "Broadcast";
     message["action"] = 0;
-    message["data"] = _parsePlayerInfo(connection, Json::objectValue);
+    message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
     room->publish(move(message));
     _checkReady(move(room));
 }
@@ -44,7 +44,7 @@ void StreamManager::unsubscribe(const string &id, const WebSocketConnectionPtr &
             Json::Value message, response;
             message["message"] = "Broadcast";
             message["action"] = 5;
-            message["data"] = _parsePlayerInfo(connection, Json::objectValue);
+            message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
             room->publish(move(message));
 
             if (connection->connected()) {
@@ -71,13 +71,13 @@ void StreamManager::publish(
     auto room = getRoom(rid);
 
     if (action == 3) {
-        connection->getContext<Stream>()->setPlace(room->generatePlace());
+        _getStream(connection)->setPlace(room->generatePlace());
     }
 
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = _parsePlayerInfo(connection, move(data));
+    response["data"] = _getStream(connection)->parsePlayerInfo(move(data));
     room->publish(move(response));
 }
 
@@ -92,7 +92,7 @@ void StreamManager::publish(
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
+    response["data"] = _getStream(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     room->publish(move(response), excluded);
     if (action == 3) {
         _checkFinished(move(room));
@@ -108,12 +108,8 @@ Json::Value StreamManager::parseInfo() const {
     return info;
 }
 
-Json::Value StreamManager::_parsePlayerInfo(
-        const WebSocketConnectionPtr &connection,
-        Json::Value &&data
-) {
-    data["uid"] = connection->getContext<Stream>()->getUid();
-    return data;
+shared_ptr<Stream> StreamManager::_getStream(const drogon::WebSocketConnectionPtr &connection) {
+    return connection->getContext<Stream>();
 }
 
 void StreamManager::_checkReady(RoomWithLock &&room) {
