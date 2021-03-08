@@ -74,11 +74,6 @@ namespace tech::plugins {
     private:
         std::unordered_map<std::string, uint64_t> _typesMap{};
 
-        static Json::Value _parsePlayerInfo(
-                const drogon::WebSocketConnectionPtr &connection,
-                Json::Value &&data
-        );
-
         void _checkReady(const std::string &rid);
     };
 }

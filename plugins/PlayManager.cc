@@ -68,7 +68,7 @@ void PlayManager::subscribe(
 
     message["message"] = "Broadcast";
     message["action"] = 2;
-    message["data"] = _parsePlayerInfo(connection, move(data));
+    message["data"] = play->parsePlayerInfo(move(data));
     room->publish(2, move(message), play->getSidsMap()->begin()->second);
 
     response["message"] = "OK";
@@ -87,7 +87,7 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
             Json::Value message, response;
             message["message"] = "Broadcast";
             message["action"] = 3;
-            message["data"] = _parsePlayerInfo(connection, Json::objectValue); // TODO: Remove unnecessary items.
+            message["data"] = connection->getContext<Play>()->parsePlayerInfo(Json::objectValue); // TODO: Remove unnecessary items.
             room->publish(3, move(message));
 
             if (connection->connected()) {
@@ -128,7 +128,7 @@ void PlayManager::publish(
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = _parsePlayerInfo(connection, move(data));
+    response["data"] = connection->getContext<Play>()->parsePlayerInfo(move(data));
     room->publish(action, move(response));
 }
 
@@ -143,7 +143,7 @@ void PlayManager::publish(
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
-    response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
+    response["data"] = connection->getContext<Play>()->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     room->publish(action, move(response), excluded);
 }
 
@@ -196,18 +196,6 @@ Json::Value PlayManager::parseInfo(
         }
     }
     return info;
-}
-
-Json::Value PlayManager::_parsePlayerInfo(
-        const WebSocketConnectionPtr &connection,
-        Json::Value &&data
-) {
-    auto play = connection->getContext<Play>();
-    auto info = play->getInfo();
-    data["sid"] = play->getSidsMap()->begin()->second;
-    data["uid"] = info->getValueOfId();
-    data["username"] = info->getValueOfId();
-    return data;
 }
 
 void PlayManager::_checkReady(const std::string &rid) {
