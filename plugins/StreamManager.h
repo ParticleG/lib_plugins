@@ -47,7 +47,7 @@ namespace tech ::plugins {
 
         void _checkReady(RoomWithLock &&room);
 
-        void _checkFinished(const std::string &rid);
+        void _checkFinished(RoomWithLock &&room);
     };
 }
 

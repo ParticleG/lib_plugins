@@ -95,7 +95,7 @@ void StreamManager::publish(
     response["data"] = _parsePlayerInfo(connection, move(data)); // TODO: Remove unnecessary items.
     room->publish(move(response), excluded);
     if (action == 3) {
-        _checkFinished(rid);
+        _checkFinished(move(room));
     }
 }
 
@@ -134,8 +134,8 @@ void StreamManager::_checkReady(RoomWithLock &&room) {
     }
 }
 
-void StreamManager::_checkFinished(const string &rid) {
-    auto room = getRoom(rid);
+void StreamManager::_checkFinished(RoomWithLock &&room) {
+    const string &rid = room->getID();
     if (room->checkFinished()) {
         thread([rid, room{move(room)}]() { // TODO: is room safe here?
             this_thread::sleep_for(chrono::seconds(3));
