@@ -26,10 +26,8 @@ namespace tech::plugins {
         Json::Value parseInfo() const;
 
     private:
-        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection, const std::string &message);
 
-        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection);
-
+        static std::shared_ptr<tech::structures::Chat> _getChat(const drogon::WebSocketConnectionPtr &connection);
     };
 }
 

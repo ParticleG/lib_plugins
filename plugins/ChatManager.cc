@@ -48,7 +48,7 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
     message["message"] = "Broadcast";
     message["action"] = 1;
     message["rid"] = id;
-    message["data"] = _getPlayerInfo(connection);
+    message["data"] = _getChat(connection)->getPlayerInfo();
     room->publish(move(message));
 
     response["message"] = "OK";
@@ -66,7 +66,7 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
     message["message"] = "Broadcast";
     message["action"] = 2;
     message["rid"] = id;
-    message["data"] = _getPlayerInfo(connection);
+    message["data"] = _getChat(connection)->getPlayerInfo();
     room->publish(move(message));
 
     if (connection->connected()) {
@@ -83,7 +83,7 @@ void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &conne
     response["message"] = "Broadcast";
     response["action"] = 3;
     response["rid"] = rid;
-    response["data"]["histories"] = _getPlayerInfo(connection, message);
+    response["data"]["histories"] = _getChat(connection)->getPlayerInfo(message);
     room->publish(move(response));
 }
 
@@ -96,20 +96,6 @@ Json::Value ChatManager::parseInfo() const {
     return info;
 }
 
-Json::Value ChatManager::_getPlayerInfo(const WebSocketConnectionPtr &connection, const string &message) {
-    auto info = connection->getContext<Chat>()->getInfo();
-    Json::Value result;
-    result["uid"] = info->getValueOfId();
-    result["username"] = info->getValueOfId();
-    result["time"] = Utils::fromDate();
-    result["message"] = message;
-    return result;
-}
-
-Json::Value ChatManager::_getPlayerInfo(const WebSocketConnectionPtr &connection) {
-    auto info = connection->getContext<Chat>()->getInfo();
-    Json::Value result;
-    result["uid"] = info->getValueOfId();
-    result["username"] = info->getValueOfId();
-    return result;
+shared_ptr<Chat> ChatManager::_getChat(const drogon::WebSocketConnectionPtr &connection) {
+    return connection->getContext<Chat>();
 }
