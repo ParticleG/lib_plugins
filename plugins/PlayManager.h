@@ -13,9 +13,9 @@ namespace tech::plugins {
             public tech::structures::BaseManager<tech::structures::PlayRoom>,
             public drogon::Plugin<PlayManager> {
     public:
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
         uint64_t getCapacity(const std::string &type) const;
 
@@ -72,12 +72,10 @@ namespace tech::plugins {
         ) const;
 
     private:
-        std::unordered_map<std::string, uint64_t> _typesMap{};
 
-        static Json::Value _parsePlayerInfo(
-                const drogon::WebSocketConnectionPtr &connection,
-                Json::Value &&data
-        );
+        static std::shared_ptr<tech::structures::Play> _getPlay(const drogon::WebSocketConnectionPtr &connection);
+
+        std::unordered_map<std::string, uint64_t> _typesMap{};
 
         void _checkReady(const std::string &rid);
     };

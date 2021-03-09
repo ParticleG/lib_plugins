@@ -14,9 +14,9 @@ namespace tech::plugins {
     public:
         HandlerManager();
 
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
         drogon::CloseCode process(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,

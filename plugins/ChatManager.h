@@ -13,9 +13,9 @@ namespace tech::plugins {
             public tech::structures::BaseManager<tech::structures::ChatRoom>,
             public drogon::Plugin<ChatManager> {
     public:
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
         void subscribe(const std::string &id, drogon::WebSocketConnectionPtr connection) override;
 
@@ -26,10 +26,8 @@ namespace tech::plugins {
         Json::Value parseInfo() const;
 
     private:
-        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection, const std::string &message);
 
-        static Json::Value _getPlayerInfo(const drogon::WebSocketConnectionPtr &connection);
-
+        static std::shared_ptr<tech::structures::Chat> _getChat(const drogon::WebSocketConnectionPtr &connection);
     };
 }
 

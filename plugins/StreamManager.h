@@ -13,9 +13,9 @@ namespace tech ::plugins {
             public tech::structures::BaseManager<tech::structures::StreamRoom>,
             public drogon::Plugin<StreamManager> {
     public:
-        virtual void initAndStart(const Json::Value &config) override;
+        void initAndStart(const Json::Value &config) override;
 
-        virtual void shutdown() override;
+        void shutdown() override;
 
 
         void subscribe(const std::string &id, drogon::WebSocketConnectionPtr connection) override;
@@ -40,14 +40,12 @@ namespace tech ::plugins {
         Json::Value parseInfo() const;
 
     private:
-        static Json::Value _parsePlayerInfo(
-                const drogon::WebSocketConnectionPtr &connection,
-                Json::Value &&data
-        );
 
-        void _checkReady(const std::string &rid);
+        static std::shared_ptr<tech::structures::Stream> _getStream(const drogon::WebSocketConnectionPtr &connection);
+        
+        void _checkReady(RoomWithLock &&room);
 
-        void _checkFinished(const std::string &rid);
+        void _checkFinished(RoomWithLock &&room);
     };
 }
 
