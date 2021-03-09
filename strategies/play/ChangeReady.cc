@@ -27,7 +27,7 @@ CloseCode ChangeReady::fromJson(
         response["message"] = "Wrong format";
         response["reason"] = "Requires bool type 'ready' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Play>()->getSidsMap()->begin()->first;
+        auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
         try {
             _playManager->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
         } catch (const exception &error) {

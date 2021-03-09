@@ -26,7 +26,7 @@ CloseCode PublishStreamData::fromJson(
         response["message"] = "Wrong format";
         response["reason"] = "Requires string type 'stream' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Stream>()->getSidsMap()->begin()->first;
+        auto rid = wsConnPtr->getContext<Stream>()->getSidsMap().begin()->first;
         auto data = request["data"];
         try {
             _streamManager->publish(rid, wsConnPtr, 2, move(data));

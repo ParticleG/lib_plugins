@@ -27,7 +27,7 @@ CloseCode ChangeConfig::fromJson(
         response["message"] = "Wrong format";
         response["reason"] = "Requires string type 'config' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Play>()->getSidsMap()->begin()->first;
+        auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
         try {
             _playManager->changeConfig(rid, request["data"]["config"].asString(), wsConnPtr);
         } catch (const exception &error) {

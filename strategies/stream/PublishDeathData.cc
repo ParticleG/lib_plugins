@@ -32,7 +32,7 @@ CloseCode PublishDeathData::fromJson(
         stream->setSurvivalTime(request["data"]["survivalTime"].asUInt64());
         stream->setDead(true);
 
-        auto rid = stream->getSidsMap()->begin()->first;
+        auto rid = stream->getSidsMap().begin()->first;
         auto data = request["data"];
         try {
             _streamManager->publish(rid, wsConnPtr, 3, move(data));

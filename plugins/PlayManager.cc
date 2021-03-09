@@ -69,7 +69,7 @@ void PlayManager::subscribe(
     message["message"] = "Broadcast";
     message["action"] = 2;
     message["data"] = play->parsePlayerInfo(move(data));
-    room->publish(2, move(message), play->getSidsMap()->begin()->second);
+    room->publish(2, move(message), play->getSidsMap().begin()->second);
 
     response["message"] = "OK";
     response["action"] = 2;
@@ -156,7 +156,7 @@ void PlayManager::changeConfig(
     Json::Value data;
     data["config"] = config;
     play->setConfig(move(config));
-    publish(rid, connection, 5, move(data), play->getSidsMap()->begin()->second);
+    publish(rid, connection, 5, move(data), play->getSidsMap().begin()->second);
 }
 
 void PlayManager::changeReady(
@@ -168,7 +168,7 @@ void PlayManager::changeReady(
     Json::Value data;
     data["ready"] = ready;
     play->setReady(ready);
-    publish(rid, connection, 6, move(data), play->getSidsMap()->begin()->second);
+    publish(rid, connection, 6, move(data), play->getSidsMap().begin()->second);
     _checkReady(rid);
 }
 
