@@ -4,7 +4,7 @@
 
 #include <plugins/PlayManager.h>
 #include <plugins/StreamManager.h>
-#include <utils/Utils.h>
+#include <utils/misc.h>
 
 using namespace tech::plugins;
 using namespace tech::structures;
@@ -50,7 +50,7 @@ void StreamManager::unsubscribe(const string &id, const WebSocketConnectionPtr &
             if (connection->connected()) {
                 response["message"] = "OK";
                 response["action"] = 5;
-                connection->send(WebSocket::fromJson(response));
+                connection->send(websocket::fromJson(response));
             }
             return;
         }
@@ -124,7 +124,7 @@ void StreamManager::_checkReady(RoomWithLock &&room) {
             Json::Value response;
             response["message"] = "Server";
             response["action"] = 1;
-            response["data"]["seed"] = Utils::uniform_random();
+            response["data"]["seed"] = misc::uniform_random();
             room->publish(move(response));
         }).detach();
     }

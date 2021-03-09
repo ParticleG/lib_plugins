@@ -77,7 +77,7 @@ void HandlerManager::shutdown() {
 
 CloseCode HandlerManager::process(
         const WebSocketConnectionPtr &wsConnPtr,
-        const WebSocket::Type &type,
+        const websocket::Type &type,
         int action,
         const Json::Value &request,
         Json::Value &response

@@ -4,7 +4,7 @@
 
 #include <plugins/Configurator.h>
 #include <strategies/play/CreateRoom.h>
-#include <utils/Crypto.h>
+#include <utils/crypto.h>
 
 using namespace drogon;
 using namespace drogon_model;
@@ -48,7 +48,7 @@ CloseCode CreateRoom::fromJson(
 
         try {
             auto capacity = _playManager->getCapacity(type);
-            auto rid = Crypto::blake2b(drogon::utils::getUuid());
+            auto rid = crypto::blake2b(drogon::utils::getUuid());
             auto room = PlayRoom(
                     rid,
                     type,

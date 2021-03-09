@@ -3,8 +3,8 @@
 //
 
 #include <plugins/PlayManager.h>
-#include <utils/Crypto.h>
-#include <utils/Utils.h>
+#include <utils/crypto.h>
+#include <utils/misc.h>
 
 using namespace tech::plugins;
 using namespace tech::structures;
@@ -76,7 +76,7 @@ void PlayManager::subscribe(
     response["data"]["ready"] = play->getReady();
     response["data"]["histories"] = room->getHistory(0, 10);
     response["data"]["players"] = room->getPlayers();
-    connection->send(WebSocket::fromJson(response));
+    connection->send(websocket::fromJson(response));
 }
 
 void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
@@ -93,7 +93,7 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
             if (connection->connected()) {
                 response["message"] = "OK";
                 response["action"] = 3;
-                connection->send(WebSocket::fromJson(response));
+                connection->send(websocket::fromJson(response));
             }
             return;
         }
@@ -108,7 +108,7 @@ void PlayManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
 void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value &&data) {
     auto room = getRoom(rid);
     if (action == 4) {
-        data["time"] = Utils::fromDate();
+        data["time"] = misc::fromDate();
     }
     Json::Value response;
     response["message"] = "Server";
@@ -124,7 +124,7 @@ void PlayManager::publish(
         Json::Value &&data
 ) {
     auto room = getRoom(rid);
-    data["time"] = Utils::fromDate();
+    data["time"] = misc::fromDate();
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
@@ -241,7 +241,7 @@ void PlayManager::_checkReady(const std::string &rid) {
             Json::Value response;
             response["message"] = "Server";
             response["action"] = 8;
-            response["data"]["rid"] = Crypto::blake2b(drogon::utils::getUuid(), 1);
+            response["data"]["rid"] = crypto::blake2b(drogon::utils::getUuid(), 1);
             room->publish(8, move(response));
             room->setPendingStart(false);
             room->setStart(true);

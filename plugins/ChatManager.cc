@@ -3,7 +3,7 @@
 //
 
 #include <plugins/ChatManager.h>
-#include <utils/Utils.h>
+#include <utils/misc.h>
 
 using namespace tech::plugins;
 using namespace tech::structures;
@@ -60,7 +60,7 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
     response["action"] = 1;
     response["rid"] = id;
     response["data"] = room->getHistory(0, 20);
-    connection->send(WebSocket::fromJson(response));
+    connection->send(websocket::fromJson(response));
 }
 
 void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
@@ -78,7 +78,7 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
         response["message"] = "OK";
         response["action"] = 2;
         response["rid"] = id;
-        connection->send(WebSocket::fromJson(response));
+        connection->send(websocket::fromJson(response));
     }
 }
 

@@ -5,8 +5,8 @@
 #include <plugins/Configurator.h>
 #include <strategies/user/GetAccessToken.h>
 #include <structures/User.h>
-#include <utils/Crypto.h>
-#include <utils/Utils.h>
+#include <utils/crypto.h>
+#include <utils/misc.h>
 
 using namespace drogon;
 using namespace drogon_model;
@@ -26,8 +26,8 @@ CloseCode GetAccessToken::fromJson(
     try {
         auto auth = wsConnPtr->getContext<User>()->getAuth();
         auto *configurator = app().getPlugin<Configurator>();
-        auth->setAccessToken(Crypto::keccak(drogon::utils::getUuid()));
-        auth->setAccessTokenExpireTime(Utils::fromDate(configurator->getAccessExpire()));
+        auth->setAccessToken(crypto::keccak(drogon::utils::getUuid()));
+        auth->setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
         _authMapper.update(*auth);
         response["message"] = "OK";
         response["accessToken"] = auth->getValueOfAccessToken();

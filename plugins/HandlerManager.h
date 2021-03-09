@@ -7,7 +7,7 @@
 #include <drogon/plugins/Plugin.h>
 #include <strategies/base/MessageHandler.h>
 #include <structures/HandlerFactory.h>
-#include <utils/WebSocket.h>
+#include <utils/websocket.h>
 
 namespace tech::plugins {
     class HandlerManager : public drogon::Plugin<HandlerManager> {
@@ -20,7 +20,7 @@ namespace tech::plugins {
 
         drogon::CloseCode process(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
-                const tech::utils::WebSocket::Type &type,
+                const tech::utils::websocket::Type &type,
                 int action,
                 const Json::Value &request,
                 Json::Value &response
