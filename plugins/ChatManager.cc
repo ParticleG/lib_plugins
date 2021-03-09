@@ -20,10 +20,15 @@ void ChatManager::initAndStart(const Json::Value &config) {
                     channel.isMember("capacity") && channel["capacity"].isUInt64() &&
                     channel.isMember("historyCount") && channel["historyCount"].isUInt64()
                     ) {
-                createRoom(ChatRoom(
-                        channel["id"].asString(),
-                        channel["capacity"].asUInt64(),
-                        channel["historyCount"].asUInt()));
+                try {
+                    createRoom(move(ChatRoom(
+                            channel["id"].asString(),
+                            channel["capacity"].asUInt64(),
+                            channel["historyCount"].asUInt())));
+                } catch (const exception &error) {
+                    LOG_ERROR << error.what();
+                    abort();
+                }
             } else {
                 LOG_ERROR << R"(Requires string value "id", UInt64 type "capacity", UInt64 type "historyCount" in config['channels'])";
                 abort();
