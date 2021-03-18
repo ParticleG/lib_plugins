@@ -46,7 +46,7 @@ void ChatManager::shutdown() {
 }
 
 void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection) {
-    auto &sharedRoom = getSharedRoom(id);
+    auto sharedRoom = getSharedRoom(id);
     sharedRoom.room.subscribe(connection);
 
     Json::Value message, response;
@@ -64,7 +64,7 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
 }
 
 void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
-    auto &sharedRoom = getSharedRoom(id);
+    auto sharedRoom = getSharedRoom(id);
     sharedRoom.room.unsubscribe(connection);
 
     Json::Value message, response;
@@ -94,9 +94,9 @@ void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &conne
 Json::Value ChatManager::parseInfo() const {
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
-    for (const auto &pair : _idsMap) {
-        shared_lock<shared_mutex> roomLock(pair.second.sharedMutex);
-        info.append(pair.second.room.parseInfo());
+    for (const auto &[id, room_with_mutex] : _idsMap) {
+        shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
+        info.append(room_with_mutex.room.parseInfo());
     }
     return info;
 }
