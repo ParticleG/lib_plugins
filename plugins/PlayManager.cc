@@ -50,7 +50,7 @@ void PlayManager::subscribe(
         const string &password,
         const WebSocketConnectionPtr &connection
 ) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     if (sharedRoom.room.getStart()) {
         throw invalid_argument("Room already started");
     }
@@ -81,7 +81,7 @@ void PlayManager::subscribe(
 
 void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &connection) {
     {
-        auto &sharedRoom = getSharedRoom(rid);
+        auto sharedRoom = getSharedRoom(rid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             Json::Value message, response;
@@ -104,7 +104,7 @@ void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &c
 }
 
 void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value &&data) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     if (action == 4) {
         data["time"] = misc::fromDate();
     }
@@ -121,7 +121,7 @@ void PlayManager::publish(
         const uint64_t &action,
         Json::Value &&data
 ) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     data["time"] = misc::fromDate();
     Json::Value response;
     response["message"] = "Broadcast";
@@ -137,7 +137,7 @@ void PlayManager::publish(
         Json::Value &&data,
         const uint64_t &excluded
 ) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
@@ -179,8 +179,8 @@ Json::Value PlayManager::parseInfo(
     Json::Value info(Json::arrayValue);
     if (begin < _idsMap.size()) {
         unsigned int counter = 0;
-        for (const auto &pair : _idsMap) {
-            shared_lock<shared_mutex> roomLock(pair.second.sharedMutex);
+        for (const auto &[id, room_with_mutex] : _idsMap) {
+            shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
             if (counter < begin) {
                 ++counter;
                 continue;
@@ -188,8 +188,8 @@ Json::Value PlayManager::parseInfo(
             if (counter >= begin + count) {
                 break;
             }
-            if (type.empty() || type == pair.second.room.getType()) {
-                info.append(pair.second.room.parseInfo());
+            if (type.empty() || type == room_with_mutex.room.getType()) {
+                info.append(room_with_mutex.room.parseInfo());
             }
             ++counter;
         }
@@ -204,7 +204,7 @@ shared_ptr<Play> PlayManager::_getPlay(const drogon::WebSocketConnectionPtr &con
 void PlayManager::_checkReady(const std::string &rid) {
     bool allReady = true;
     {
-        auto &sharedRoom = getSharedRoom(rid);
+        auto sharedRoom = getSharedRoom(rid);
         if (sharedRoom.room.getPendingStart()) {
             return;
         }
@@ -225,7 +225,7 @@ void PlayManager::_checkReady(const std::string &rid) {
     }
     if (allReady) {
         thread([this, &rid]() { // TODO: is room safe here?
-            auto &sharedRoom = getSharedRoom(rid);
+            auto sharedRoom = getSharedRoom(rid);
             for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
                 this_thread::sleep_for(chrono::milliseconds(10));
                 auto players = sharedRoom.room.getPlayers();

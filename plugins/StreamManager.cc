@@ -22,7 +22,7 @@ void StreamManager::shutdown() {
 }
 
 void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connection) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     if (sharedRoom.room.getStart()) {
         throw invalid_argument("Room already started");
     }
@@ -38,7 +38,7 @@ void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connecti
 
 void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &connection) {
     {
-        auto &sharedRoom = getSharedRoom(rid);
+        auto sharedRoom = getSharedRoom(rid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             Json::Value message, response;
@@ -66,7 +66,7 @@ void StreamManager::publish(
         const uint64_t &action,
         Json::Value &&data
 ) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
 
     if (action == 3) {
         _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
@@ -86,7 +86,7 @@ void StreamManager::publish(
         Json::Value &&data,
         const uint64_t &excluded
 ) {
-    auto &sharedRoom = getSharedRoom(rid);
+    auto sharedRoom = getSharedRoom(rid);
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = action;
@@ -100,9 +100,9 @@ void StreamManager::publish(
 Json::Value StreamManager::parseInfo() const {
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
-    for (const auto &pair : _idsMap) {
-        shared_lock<shared_mutex> roomLock(pair.second.sharedMutex);
-        info.append(pair.second.room.parseInfo());
+    for (const auto &[id, room_with_mutex] : _idsMap) {
+        shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
+        info.append(room_with_mutex.room.parseInfo());
     }
     return info;
 }
@@ -114,14 +114,14 @@ shared_ptr<Stream> StreamManager::_getStream(const drogon::WebSocketConnectionPt
 void StreamManager::_checkReady(const string &rid) {
     bool allReady = true;
     {
-        auto &sharedRoom = getSharedRoom(rid);
+        auto sharedRoom = getSharedRoom(rid);
         if (!sharedRoom.room.isFull()) {
             allReady = false;
         }
     }
     if (allReady) {
         thread([this, &rid]() { // TODO: is room safe here?
-            auto &sharedRoom = getSharedRoom(rid);
+            auto sharedRoom = getSharedRoom(rid);
             this_thread::sleep_for(chrono::seconds(1));
             sharedRoom.room.setStart(true);
             Json::Value response;
@@ -136,7 +136,7 @@ void StreamManager::_checkReady(const string &rid) {
 void StreamManager::_checkFinished(const string &rid) {
     if (getSharedRoom(rid).room.checkFinished()) {
         thread([this, &rid]() { // TODO: is room safe here?
-            auto &sharedRoom = getSharedRoom(rid);
+            auto sharedRoom = getSharedRoom(rid);
             this_thread::sleep_for(chrono::seconds(3));
             Json::Value response, result;
             response["message"] = "Server";
