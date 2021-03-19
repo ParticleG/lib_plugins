@@ -22,13 +22,13 @@ namespace tech::plugins {
         void subscribe(const std::string &rid, drogon::WebSocketConnectionPtr connection) override {}
 
         void subscribe(
-                const std::string &id,
+                const std::string &rid,
                 const std::string &password,
                 const drogon::WebSocketConnectionPtr &connection
         );
 
         void unsubscribe(
-                const std::string &id,
+                const std::string &rid,
                 const drogon::WebSocketConnectionPtr &connection
         ) override;
 

@@ -46,33 +46,33 @@ void ChatManager::shutdown() {
 }
 
 void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection) {
-    auto room = getRoom(id);
-    room->subscribe(connection);
+    auto sharedRoom = getSharedRoom(id);
+    sharedRoom.room.subscribe(connection);
 
     Json::Value message, response;
     message["message"] = "Broadcast";
     message["action"] = 1;
     message["rid"] = id;
     message["data"] = _getChat(connection)->getPlayerInfo();
-    room->publish(move(message));
+    sharedRoom.room.publish(move(message));
 
     response["message"] = "OK";
     response["action"] = 1;
     response["rid"] = id;
-    response["data"] = room->getHistory(0, 20);
+    response["data"] = sharedRoom.room.getHistory(0, 20);
     connection->send(websocket::fromJson(response));
 }
 
 void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &connection) {
-    auto room = getRoom(id);
-    room->unsubscribe(connection);
+    auto sharedRoom = getSharedRoom(id);
+    sharedRoom.room.unsubscribe(connection);
 
     Json::Value message, response;
     message["message"] = "Broadcast";
     message["action"] = 2;
     message["rid"] = id;
     message["data"] = _getChat(connection)->getPlayerInfo();
-    room->publish(move(message));
+    sharedRoom.room.publish(move(message));
 
     if (connection->connected()) {
         response["message"] = "OK";
@@ -83,20 +83,20 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
 }
 
 void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &connection, const string &message) {
-    auto room = getRoom(rid);
     Json::Value response;
     response["message"] = "Broadcast";
     response["action"] = 3;
     response["rid"] = rid;
     response["data"]["histories"] = _getChat(connection)->getPlayerInfo(message);
-    room->publish(move(response));
+    getSharedRoom(rid).room.publish(move(response));
 }
 
 Json::Value ChatManager::parseInfo() const {
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
-    for (const auto &pair : _idsMap) {
-        info.append(pair.second.parseInfo());
+    for (const auto &[id, room_with_mutex] : _idsMap) {
+        shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
+        info.append(room_with_mutex.room.parseInfo());
     }
     return info;
 }

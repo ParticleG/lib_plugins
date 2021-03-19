@@ -20,7 +20,7 @@ namespace tech ::plugins {
 
         void subscribe(const std::string &id, drogon::WebSocketConnectionPtr connection) override;
 
-        void unsubscribe(const std::string &id, const drogon::WebSocketConnectionPtr &connection) override;
+        void unsubscribe(const std::string &rid, const drogon::WebSocketConnectionPtr &connection) override;
 
         void publish(
                 const std::string &rid,
@@ -42,10 +42,10 @@ namespace tech ::plugins {
     private:
 
         static std::shared_ptr<tech::structures::Stream> _getStream(const drogon::WebSocketConnectionPtr &connection);
-        
-        void _checkReady(RoomWithLock &&room);
 
-        void _checkFinished(RoomWithLock &&room);
+        void _checkReady(const std::string &rid);
+
+        void _checkFinished(const std::string &rid);
     };
 }
 
