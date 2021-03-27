@@ -56,7 +56,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     static HandlerRegistrar<MessageHandler, LeaveChannel> leaveChannelRegistrar(chatPrefix + 2);
     static HandlerRegistrar<MessageHandler, PublishChatMessage> publishChatMessageRegistrar(chatPrefix + 3);
 
-    auto playPrefix = config["Play"].asInt() * 10;
+    auto playPrefix = config["Play"].asInt() * 100;
     static HandlerRegistrar<MessageHandler, GetRoomList> getRoomListRegistrar(playPrefix + 0);
     static HandlerRegistrar<MessageHandler, CreateRoom> createRoomRegistrar(playPrefix + 1);
     static HandlerRegistrar<MessageHandler, EnterRoom> enterRoomRegistrar(playPrefix + 2);
@@ -65,7 +65,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     static HandlerRegistrar<MessageHandler, ChangeConfig> changeConfigRegistrar(playPrefix + 5);
     static HandlerRegistrar<MessageHandler, ChangeReady> changeReadyRegistrar(playPrefix + 6);
 
-    auto streamPrefix = config["Stream"].asInt() * 10;
+    auto streamPrefix = config["Stream"].asInt() * 100;
     static HandlerRegistrar<MessageHandler, PublishStreamData> publishStreamDataRegistrar(streamPrefix + 2);
     static HandlerRegistrar<MessageHandler, PublishDeathData> publishDeathData(streamPrefix + 3);
     LOG_INFO << "HandlerManager loaded.";
@@ -83,7 +83,7 @@ CloseCode HandlerManager::process(
         Json::Value &response
 ) {
     try {
-        auto handler(_handlerFactory.getHandler(static_cast<int>(type) * 10 + action));
+        auto handler(_handlerFactory.getHandler(static_cast<int>(type) * 100 + action));
         CloseCode code = handler->fromJson(wsConnPtr, request, response);
         return code;
     } catch (const out_of_range &e) {
