@@ -26,6 +26,7 @@ drogon::CloseCode GetUserInfo::fromJson(
     }
     try {
         auto info = _infoMapper.findOne(Criteria(Techmino::Info::Cols::__id, CompareOperator::EQ, id));
+        response["action"] = 1;
         response["message"] = "OK";
         response["id"] = info.getValueOfId();
         response["email"] = info.getValueOfEmail();

@@ -29,6 +29,7 @@ CloseCode GetAccessToken::fromJson(
         auth->setAccessToken(crypto::keccak(drogon::utils::getUuid()));
         auth->setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
         _authMapper.update(*auth);
+        response["action"] = 0;
         response["message"] = "OK";
         response["accessToken"] = auth->getValueOfAccessToken();
     } catch (const orm::DrogonDbException &e) {

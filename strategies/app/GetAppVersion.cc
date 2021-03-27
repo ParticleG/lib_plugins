@@ -19,6 +19,7 @@ drogon::CloseCode GetAppVersion::fromJson(
     bool newestOnly = request["data"].isMember("newestOnly") && request["data"]["newestOnly"].asBool();
     try {
         auto newestApp = _appMapper.orderBy(Techmino::App::Cols::_version_code, SortOrder::DESC).limit(1).findAll()[0];
+        response["action"] = 0;
         response["message"] = "OK";
         response["newest"]["code"] = newestApp.getValueOfVersionCode();
         response["newest"]["name"] = newestApp.getValueOfVersionName();

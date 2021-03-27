@@ -19,6 +19,7 @@ drogon::CloseCode GetNotice::fromJson(
     try {
         auto newestMessage = _messageMapper.orderBy(Techmino::Message::Cols::_id, SortOrder::DESC)
                 .findBy(Criteria(Techmino::Message::Cols::_type, CompareOperator::EQ, "notice"))[0];
+        response["action"] = 1;
         response["message"] = "OK";
         response["notice"] = newestMessage.getValueOfContent();
         return CloseCode::kNone;
