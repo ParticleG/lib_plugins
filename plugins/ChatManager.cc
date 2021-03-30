@@ -12,7 +12,6 @@ using namespace drogon;
 using namespace std;
 
 void ChatManager::initAndStart(const Json::Value &config) {
-    LOG_INFO << "Initializing ChatManager...";
     if (config.isMember("channels") && config["channels"].isArray()) {
         for (auto &channel : config["channels"]) {
             if (

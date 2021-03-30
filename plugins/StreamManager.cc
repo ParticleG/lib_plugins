@@ -13,7 +13,6 @@ using namespace drogon;
 using namespace std;
 
 void StreamManager::initAndStart(const Json::Value &config) {
-    LOG_INFO << "Initializing StreamManager...";
     LOG_INFO << "StreamManager loaded.";
 }
 
