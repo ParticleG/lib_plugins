@@ -19,9 +19,13 @@ drogon::CloseCode GetUserInfo::fromJson(
         Json::Value &response
 ) {
     int64_t id = wsConnPtr->getContext<User>()->getInfo()->getValueOfId();
+    bool detailed = false;
     if (request.isMember("data") && request["data"].isObject()) {
         if (request["data"].isMember("id") && request["data"]["id"].isInt()) {
             id = request["data"]["id"].asInt64();
+        }
+        if (request["data"].isMember("detailed") && request["data"]["detailed"].isBool()) {
+            detailed = request["data"]["detailed"].asBool();
         }
     }
     try {
@@ -31,8 +35,11 @@ drogon::CloseCode GetUserInfo::fromJson(
         response["id"] = info.getValueOfId();
         response["email"] = info.getValueOfEmail();
         response["username"] = info.getValueOfUsername();
-        response["motto"] = info.getValueOfMotto();
-        response["avatar"] = info.getValueOfAvatar();
+
+        if (detailed) {
+            response["motto"] = info.getValueOfMotto();
+            response["avatar"] = info.getValueOfAvatar();
+        }
         return CloseCode::kNone;
     } catch (const UnexpectedRows &e) {
         response["message"] = "ID not found";
