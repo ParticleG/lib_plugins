@@ -24,15 +24,17 @@ CloseCode LeaveChannel::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("rid") && request["data"]["rid"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'rid' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'rid' in 'data'";
     } else {
         auto rid = request["data"]["rid"].asString();
         try {
             _chatManager->unsubscribe(rid, wsConnPtr);
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

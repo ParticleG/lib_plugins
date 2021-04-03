@@ -65,12 +65,12 @@ void PlayManager::subscribe(
     data["config"] = play->getConfig();
     data["ready"] = play->getReady();
 
-    message["message"] = "Broadcast";
+    message["type"] = "Broadcast";
     message["action"] = 2;
     message["data"] = play->parsePlayerInfo(move(data));
     sharedRoom.room.publish(2, move(message), play->getSidsMap().begin()->second);
 
-    response["message"] = "OK";
+    response["type"] = "Self";
     response["action"] = 2;
     response["data"]["ready"] = play->getReady();
     response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
@@ -84,13 +84,13 @@ void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &c
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             Json::Value message, response;
-            message["message"] = "Broadcast";
+            message["type"] = "Broadcast";
             message["action"] = 3;
             message["data"] = _getPlay(connection)->parsePlayerInfo(Json::objectValue); // TODO: Remove unnecessary items.
             sharedRoom.room.publish(3, move(message));
 
             if (connection->connected()) {
-                response["message"] = "OK";
+                response["type"] = "Self";
                 response["action"] = 3;
                 connection->send(websocket::fromJson(response));
             }
@@ -108,7 +108,7 @@ void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value
         data["time"] = misc::fromDate();
     }
     Json::Value response;
-    response["message"] = "Server";
+    response["type"] = "Server";
     response["action"] = action;
     response["data"] = move(data);
     sharedRoom.room.publish(action, move(response));
@@ -123,7 +123,7 @@ void PlayManager::publish(
     auto sharedRoom = getSharedRoom(rid);
     data["time"] = misc::fromDate();
     Json::Value response;
-    response["message"] = "Broadcast";
+    response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getPlay(connection)->parsePlayerInfo(move(data));
     sharedRoom.room.publish(action, move(response));
@@ -138,7 +138,7 @@ void PlayManager::publish(
 ) {
     auto sharedRoom = getSharedRoom(rid);
     Json::Value response;
-    response["message"] = "Broadcast";
+    response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getPlay(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     sharedRoom.room.publish(action, move(response), excluded);
@@ -217,7 +217,7 @@ void PlayManager::_checkReady(const std::string &rid) {
         if (allReady) {
             sharedRoom.room.setPendingStart(true);
             Json::Value response;
-            response["message"] = "Server";
+            response["type"] = "Server";
             response["action"] = 7;
             sharedRoom.room.publish(7, move(response));
         }
@@ -241,7 +241,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                 }
             }
             Json::Value response;
-            response["message"] = "Server";
+            response["type"] = "Server";
             response["action"] = 8;
             response["data"]["rid"] = crypto::blake2b(drogon::utils::getUuid(), 1);
             sharedRoom.room.publish(8, move(response));

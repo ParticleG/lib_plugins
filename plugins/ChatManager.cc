@@ -49,13 +49,13 @@ void ChatManager::subscribe(const string &id, WebSocketConnectionPtr connection)
     sharedRoom.room.subscribe(connection);
 
     Json::Value message, response;
-    message["message"] = "Broadcast";
+    message["type"] = "Broadcast";
     message["action"] = 1;
     message["rid"] = id;
     message["data"] = _getChat(connection)->getPlayerInfo();
     sharedRoom.room.publish(move(message));
 
-    response["message"] = "OK";
+    response["type"] = "Self";
     response["action"] = 1;
     response["rid"] = id;
     response["data"] = sharedRoom.room.getHistory(0, 20);
@@ -67,14 +67,14 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
     sharedRoom.room.unsubscribe(connection);
 
     Json::Value message, response;
-    message["message"] = "Broadcast";
+    message["type"] = "Broadcast";
     message["action"] = 2;
     message["rid"] = id;
     message["data"] = _getChat(connection)->getPlayerInfo();
     sharedRoom.room.publish(move(message));
 
     if (connection->connected()) {
-        response["message"] = "OK";
+        response["type"] = "Self";
         response["action"] = 2;
         response["rid"] = id;
         connection->send(websocket::fromJson(response));
@@ -83,7 +83,7 @@ void ChatManager::unsubscribe(const string &id, const WebSocketConnectionPtr &co
 
 void ChatManager::publish(const string &rid, const WebSocketConnectionPtr &connection, const string &message) {
     Json::Value response;
-    response["message"] = "Broadcast";
+    response["type"] = "Broadcast";
     response["action"] = 3;
     response["rid"] = rid;
     response["data"]["histories"] = _getChat(connection)->getPlayerInfo(message);

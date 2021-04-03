@@ -86,8 +86,8 @@ CloseCode HandlerManager::process(
         CloseCode code = handler->fromJson(wsConnPtr, request, response);
         return code;
     } catch (const out_of_range &e) {
-        response["message"] = e.what();
-        return CloseCode::kNone;
+        response["type"] = "Warn";
+        response["reason"] = e.what();
+        return CloseCode::kNormalClosure;
     }
-
 }

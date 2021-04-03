@@ -20,19 +20,12 @@ CloseCode LeaveRoom::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    if (!(
-            request.isMember("data") && request["data"].isObject() &&
-            request["data"].isMember("rid") && request["data"]["rid"].isString()
-    )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'rid' in 'data'";
-    } else {
-        auto rid = request["data"]["rid"].asString();
-        try {
-            _playManager->unsubscribe(rid, wsConnPtr);
-        } catch (const exception &error) {
-            response["message"] = error.what();
-        }
+    try {
+        _playManager->unsubscribe(wsConnPtr->getContext<Play>()->getSidsMap().begin()->first, wsConnPtr);
+        return CloseCode::kNone;
+    } catch (const exception &error) {
+        response["type"] = "Warn";
+        response["reason"] = error.what();
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

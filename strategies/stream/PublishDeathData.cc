@@ -24,8 +24,8 @@ CloseCode PublishDeathData::fromJson(
             request["data"].isMember("score") && request["data"]["score"].isUInt64() &&
             request["data"].isMember("survivalTime") && request["data"]["survivalTime"].isUInt64()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires UInt64 type 'score' and 'survivalTime' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires UInt64 type 'score' and 'survivalTime' in 'data'";
     } else {
         auto stream = wsConnPtr->getContext<Stream>();
         stream->setScore(request["data"]["score"].asUInt64());
@@ -36,9 +36,11 @@ CloseCode PublishDeathData::fromJson(
         auto data = request["data"];
         try {
             _streamManager->publish(rid, wsConnPtr, 3, move(data));
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

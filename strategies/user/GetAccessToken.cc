@@ -30,12 +30,13 @@ CloseCode GetAccessToken::fromJson(
         auth->setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
         _authMapper.update(*auth);
         response["action"] = 0;
-        response["message"] = "OK";
+        response["type"] = "Self";
         response["accessToken"] = auth->getValueOfAccessToken();
     } catch (const orm::DrogonDbException &e) {
         LOG_ERROR << "error:" << e.base().what();
-        response["message"] = "Internal error";
+        response["type"] = "Error";
+        response["reason"] = "Internal error";
         return CloseCode::kUnexpectedCondition;
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

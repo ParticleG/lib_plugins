@@ -24,15 +24,17 @@ CloseCode ChangeConfig::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("config") && request["data"]["config"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'config' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'config' in 'data'";
     } else {
         auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
         try {
             _playManager->changeConfig(rid, request["data"]["config"].asString(), wsConnPtr);
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

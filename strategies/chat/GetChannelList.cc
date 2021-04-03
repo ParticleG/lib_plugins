@@ -20,8 +20,8 @@ CloseCode GetChannelList::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    response["message"] = "OK";
+    response["type"] = "Self";
     response["action"] = 0;
     response["roomList"] = _chatManager->parseInfo();
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

@@ -20,7 +20,7 @@ drogon::CloseCode GetAppVersion::fromJson(
     try {
         auto newestApp = _appMapper.orderBy(Techmino::App::Cols::_version_code, SortOrder::DESC).limit(1).findAll()[0];
         response["action"] = 0;
-        response["message"] = "OK";
+        response["type"] = "Self";
         response["newest"]["code"] = newestApp.getValueOfVersionCode();
         response["newest"]["name"] = newestApp.getValueOfVersionName();
         response["newest"]["content"] = newestApp.getValueOfVersionContent();
@@ -31,10 +31,11 @@ drogon::CloseCode GetAppVersion::fromJson(
             response["least"]["name"] = leastApp.getValueOfVersionName();
             response["least"]["content"] = leastApp.getValueOfVersionContent();
         }
-        return CloseCode::kNone;
+        return CloseCode::kNormalClosure;
     } catch (const orm::DrogonDbException &e) {
         LOG_ERROR << "error:" << e.base().what();
-        response["message"] = "Internal error";
+        response["type"] = "Error";
+        response["reason"] = "Internal error";
         return CloseCode::kUnexpectedCondition;
     }
 }

@@ -28,8 +28,8 @@ void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connecti
     sharedRoom.room.subscribe(connection);
 
     Json::Value message;
-    message["message"] = "Broadcast";
-    message["action"] = 0;
+    message["type"] = "Broadcast";
+    message["action"] = 2;
     message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
     sharedRoom.room.publish(move(message));
     _checkReady(rid);
@@ -41,14 +41,14 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             Json::Value message, response;
-            message["message"] = "Broadcast";
-            message["action"] = 5;
+            message["type"] = "Broadcast";
+            message["action"] = 3;
             message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
             sharedRoom.room.publish(move(message));
 
             if (connection->connected()) {
-                response["message"] = "OK";
-                response["action"] = 5;
+                response["type"] = "Self";
+                response["action"] = 3;
                 connection->send(websocket::fromJson(response));
             }
             return;
@@ -67,12 +67,12 @@ void StreamManager::publish(
 ) {
     auto sharedRoom = getSharedRoom(rid);
 
-    if (action == 3) {
+    if (action == 4) {
         _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
     }
 
     Json::Value response;
-    response["message"] = "Broadcast";
+    response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getStream(connection)->parsePlayerInfo(move(data));
     sharedRoom.room.publish(move(response));
@@ -87,11 +87,11 @@ void StreamManager::publish(
 ) {
     auto sharedRoom = getSharedRoom(rid);
     Json::Value response;
-    response["message"] = "Broadcast";
+    response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getStream(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     sharedRoom.room.publish(move(response), excluded);
-    if (action == 3) {
+    if (action == 4) {
         _checkFinished(rid);
     }
 }
@@ -124,8 +124,8 @@ void StreamManager::_checkReady(const string &rid) {
             this_thread::sleep_for(chrono::seconds(1));
             sharedRoom.room.setStart(true);
             Json::Value response;
-            response["message"] = "Server";
-            response["action"] = 1;
+            response["type"] = "Server";
+            response["action"] = 0;
             response["data"]["seed"] = misc::uniform_random();
             sharedRoom.room.publish(move(response));
         }).detach();
@@ -138,8 +138,8 @@ void StreamManager::_checkFinished(const string &rid) {
             auto sharedRoom = getSharedRoom(rid);
             this_thread::sleep_for(chrono::seconds(3));
             Json::Value response, result;
-            response["message"] = "Server";
-            response["action"] = 4;
+            response["type"] = "Server";
+            response["action"] = 1;
             sharedRoom.room.publish(move(response));
 
             auto playManager = app().getPlugin<PlayManager>();

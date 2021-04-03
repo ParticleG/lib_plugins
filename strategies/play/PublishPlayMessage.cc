@@ -24,16 +24,18 @@ CloseCode PublishPlayMessage::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("message") && request["data"]["message"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'message' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'message' in 'data'";
     } else {
         auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
         auto data = request["data"];
         try {
             _playManager->publish(rid, wsConnPtr, 4, move(data));
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

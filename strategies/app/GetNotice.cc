@@ -20,12 +20,13 @@ drogon::CloseCode GetNotice::fromJson(
         auto newestMessage = _messageMapper.orderBy(Techmino::Message::Cols::_id, SortOrder::DESC)
                 .findBy(Criteria(Techmino::Message::Cols::_type, CompareOperator::EQ, "notice"))[0];
         response["action"] = 1;
-        response["message"] = "OK";
+        response["type"] = "Self";
         response["notice"] = newestMessage.getValueOfContent();
-        return CloseCode::kNone;
+        return CloseCode::kNormalClosure;
     } catch (const orm::DrogonDbException &e) {
         LOG_ERROR << "error:" << e.base().what();
-        response["message"] = "Internal error";
+        response["type"] = "Error";
+        response["reason"] = "Internal error";
         return CloseCode::kUnexpectedCondition;
     }
 }

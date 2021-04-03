@@ -31,7 +31,7 @@ drogon::CloseCode GetUserInfo::fromJson(
     try {
         auto info = _infoMapper.findOne(Criteria(Techmino::Info::Cols::__id, CompareOperator::EQ, id));
         response["action"] = 1;
-        response["message"] = "OK";
+        response["type"] = "Self";
         response["id"] = info.getValueOfId();
         response["email"] = info.getValueOfEmail();
         response["username"] = info.getValueOfUsername();
@@ -40,14 +40,16 @@ drogon::CloseCode GetUserInfo::fromJson(
             response["motto"] = info.getValueOfMotto();
             response["avatar"] = info.getValueOfAvatar();
         }
-        return CloseCode::kNone;
+        return CloseCode::kNormalClosure;
     } catch (const UnexpectedRows &e) {
-        response["message"] = "ID not found";
-        response["reason"] = e.what();
-        return CloseCode::kNone;
+        LOG_WARN << e.what();
+        response["type"] = "Warn";
+        response["reason"] = "ID not found";
+        return CloseCode::kNormalClosure;
     } catch (const orm::DrogonDbException &e) {
         LOG_ERROR << "error:" << e.base().what();
-        response["message"] = "Internal error";
+        response["type"] = "Error";
+        response["reason"] = "Internal error";
         return CloseCode::kUnexpectedCondition;
     }
 }

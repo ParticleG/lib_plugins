@@ -15,6 +15,6 @@ namespace tech::strategies {
                 Json::Value &response
         ) = 0;
 
-        virtual ~MessageHandler() {}
+        virtual ~MessageHandler() = default;
     };
 }

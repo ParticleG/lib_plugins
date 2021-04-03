@@ -25,8 +25,8 @@ CloseCode CreateRoom::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("config") && request["data"]["config"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'rid' and 'config' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'rid' and 'config' in 'data'";
     } else {
         string type = "classic", name, password, config;
 
@@ -58,10 +58,12 @@ CloseCode CreateRoom::fromJson(
             );
             _playManager->createRoom(move(room));
             _playManager->subscribe(rid, password, wsConnPtr);
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
 
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

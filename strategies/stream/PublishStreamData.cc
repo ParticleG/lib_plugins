@@ -23,16 +23,18 @@ CloseCode PublishStreamData::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("stream") && request["data"]["stream"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'stream' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'stream' in 'data'";
     } else {
         auto rid = wsConnPtr->getContext<Stream>()->getSidsMap().begin()->first;
         auto data = request["data"];
         try {
             _streamManager->publish(rid, wsConnPtr, 2, move(data));
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

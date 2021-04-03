@@ -25,16 +25,18 @@ CloseCode PublishChatMessage::fromJson(
             request["data"].isMember("rid") && request["data"]["rid"].isString() &&
             request["data"].isMember("message") && request["data"]["message"].isString()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires string type 'rid' and 'message' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires string type 'rid' and 'message' in 'data'";
     } else {
         auto rid = request["data"]["rid"].asString();
         auto message = request["data"]["message"].asString();
         try {
             _chatManager->publish(rid, wsConnPtr, message);
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

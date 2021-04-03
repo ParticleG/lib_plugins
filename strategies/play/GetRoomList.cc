@@ -33,8 +33,8 @@ CloseCode GetRoomList::fromJson(
             count = request["data"]["count"].asUInt();
         }
     }
-    response["message"] = "OK";
+    response["type"] = "Self";
     response["action"] = 0;
     response["roomList"] = _playManager->parseInfo(type, begin, count);
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }

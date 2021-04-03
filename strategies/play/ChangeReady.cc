@@ -24,15 +24,17 @@ CloseCode ChangeReady::fromJson(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("ready") && request["data"]["ready"].isBool()
     )) {
-        response["message"] = "Wrong format";
-        response["reason"] = "Requires bool type 'ready' in 'data'";
+        response["type"] = "Warn";
+        response["reason"] = "Wrong format: Requires bool type 'ready' in 'data'";
     } else {
         auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
         try {
             _playManager->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
+            return CloseCode::kNone;
         } catch (const exception &error) {
-            response["message"] = error.what();
+            response["type"] = "Warn";
+            response["reason"] = error.what();
         }
     }
-    return CloseCode::kNone;
+    return CloseCode::kNormalClosure;
 }
