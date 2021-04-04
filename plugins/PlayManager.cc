@@ -223,30 +223,35 @@ void PlayManager::_checkReady(const std::string &rid) {
         }
     }
     if (allReady) {
-        thread([this, &rid]() { // TODO: is room safe here?
-            auto sharedRoom = getSharedRoom(rid);
-            for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
-                this_thread::sleep_for(chrono::milliseconds(10));
-                auto players = sharedRoom.room.getPlayers();
-                bool allReady = true;
-                for (auto player : players) {
-                    if (!player["ready"]) {
-                        allReady = false;
-                        break;
+        thread([this, rid]() { // TODO: No, the rid is not safe.
+            try {
+                auto sharedRoom = getSharedRoom(rid);
+                for (unsigned int milliseconds = 0; milliseconds < 300; ++milliseconds) {
+                    this_thread::sleep_for(chrono::milliseconds(10));
+                    auto players = sharedRoom.room.getPlayers();
+                    bool allReady = true;
+                    for (auto player : players) {
+                        if (!player["ready"]) {
+                            allReady = false;
+                            break;
+                        }
+                    }
+                    if (!allReady) {
+                        sharedRoom.room.setPendingStart(false);
+                        return;
                     }
                 }
-                if (!allReady) {
-                    sharedRoom.room.setPendingStart(false);
-                    return;
-                }
+                Json::Value response;
+                response["type"] = "Server";
+                response["action"] = 8;
+                response["data"]["rid"] = crypto::blake2b(drogon::utils::getUuid(), 1);
+                sharedRoom.room.publish(8, move(response));
+                sharedRoom.room.setPendingStart(false);
+                sharedRoom.room.setStart(true);
+            } catch (const exception &error) {
+                LOG_FATAL << error.what();
+                abort();
             }
-            Json::Value response;
-            response["type"] = "Server";
-            response["action"] = 8;
-            response["data"]["rid"] = crypto::blake2b(drogon::utils::getUuid(), 1);
-            sharedRoom.room.publish(8, move(response));
-            sharedRoom.room.setPendingStart(false);
-            sharedRoom.room.setStart(true);
         }).detach();
     }
 }

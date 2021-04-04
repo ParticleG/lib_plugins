@@ -119,37 +119,48 @@ void StreamManager::_checkReady(const string &rid) {
         }
     }
     if (allReady) {
-        thread([this, &rid]() { // TODO: is room safe here?
-            auto sharedRoom = getSharedRoom(rid);
-            this_thread::sleep_for(chrono::seconds(1));
-            sharedRoom.room.setStart(true);
-            Json::Value response;
-            response["type"] = "Server";
-            response["action"] = 0;
-            response["data"]["seed"] = misc::uniform_random();
-            sharedRoom.room.publish(move(response));
+        thread([this, rid]() { // TODO: is room safe here?
+            try {
+                auto sharedRoom = getSharedRoom(rid);
+                this_thread::sleep_for(chrono::seconds(1));
+                sharedRoom.room.setStart(true);
+                Json::Value response;
+                response["type"] = "Server";
+                response["action"] = 0;
+                response["data"]["seed"] = misc::uniform_random();
+                sharedRoom.room.publish(move(response));
+            } catch (const exception &error) {
+                LOG_FATAL << error.what();
+                abort();
+            }
         }).detach();
     }
 }
 
 void StreamManager::_checkFinished(const string &rid) {
     if (getSharedRoom(rid).room.checkFinished()) {
-        thread([this, &rid]() { // TODO: is room safe here?
-            auto sharedRoom = getSharedRoom(rid);
-            this_thread::sleep_for(chrono::seconds(3));
-            Json::Value response, result;
-            response["type"] = "Server";
-            response["action"] = 1;
-            sharedRoom.room.publish(move(response));
+        thread([this, rid]() { // TODO: is room safe here?
+            try {
+                auto sharedRoom = getSharedRoom(rid);
+                this_thread::sleep_for(chrono::seconds(3));
+                Json::Value response, result;
+                response["type"] = "Server";
+                response["action"] = 1;
+                sharedRoom.room.publish(move(response));
 
-            auto playManager = app().getPlugin<PlayManager>();
-            result["start"] = false;
-            result["result"] = sharedRoom.room.getDeaths();
-            playManager->publish(rid, 9, move(result));
+                auto playManager = app().getPlugin<PlayManager>();
+                result["start"] = false;
+                result["result"] = sharedRoom.room.getDeaths();
+                playManager->publish(rid, 9, move(result));
 
-            this_thread::sleep_for(chrono::seconds(3));
-            auto streamManager = app().getPlugin<StreamManager>();
-            streamManager->removeRoom(rid); // TODO: Check if is websocket friendly.
+                this_thread::sleep_for(chrono::seconds(3));
+                auto streamManager = app().getPlugin<StreamManager>();
+                streamManager->removeRoom(rid); // TODO: Check if is websocket friendly.
+            } catch (const exception &error) {
+                LOG_FATAL << error.what();
+                abort();
+            }
+
         }).detach();
     }
 }
