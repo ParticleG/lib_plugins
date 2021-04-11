@@ -21,7 +21,7 @@ CloseCode LeaveRoom::fromJson(
         Json::Value &response
 ) {
     try {
-        _playManager->unsubscribe(wsConnPtr->getContext<Play>()->getSidsMap().begin()->first, wsConnPtr);
+        _playManager->unsubscribe(get<string>(wsConnPtr->getContext<Play>()->getRid()), wsConnPtr);
         return CloseCode::kNone;
     } catch (const exception &error) {
         response["type"] = "Warn";
