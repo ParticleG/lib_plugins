@@ -4,7 +4,6 @@
 
 #include <plugins/Configurator.h>
 #include <strategies/play/EnterRoom.h>
-#include <structures/Play.h>
 
 using namespace drogon;
 using namespace drogon_model;
