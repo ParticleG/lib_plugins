@@ -2,6 +2,7 @@
 // Created by Particle_G on 2021/2/17.
 //
 
+#include <strategies/actions.h>
 #include <strategies/app/GetAppVersion.h>
 
 using namespace tech::strategies;
@@ -19,7 +20,7 @@ drogon::CloseCode GetAppVersion::fromJson(
     bool newestOnly = request["data"].isMember("newestOnly") && request["data"]["newestOnly"].asBool();
     try {
         auto newestApp = _appMapper.orderBy(Techmino::App::Cols::_version_code, SortOrder::DESC).limit(1).findAll()[0];
-        response["action"] = 0;
+        response["action"] = static_cast<int>(actions::App::getAppVersion);
         response["type"] = "Self";
         response["newest"]["code"] = newestApp.getValueOfVersionCode();
         response["newest"]["name"] = newestApp.getValueOfVersionName();

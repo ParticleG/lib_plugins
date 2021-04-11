@@ -2,6 +2,7 @@
 // Created by Particle_G on 2021/2/17.
 //
 
+#include <strategies/actions.h>
 #include <strategies/app/GetNotice.h>
 
 using namespace tech::strategies;
@@ -19,7 +20,7 @@ drogon::CloseCode GetNotice::fromJson(
     try {
         auto newestMessage = _messageMapper.orderBy(Techmino::Message::Cols::_id, SortOrder::DESC)
                 .findBy(Criteria(Techmino::Message::Cols::_type, CompareOperator::EQ, "notice"))[0];
-        response["action"] = 1;
+        response["action"] = static_cast<int>(actions::App::getNotice);
         response["type"] = "Self";
         response["notice"] = newestMessage.getValueOfContent();
         return CloseCode::kNormalClosure;

@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/play/PublishPlayMessage.h>
 
 using namespace drogon;
@@ -30,7 +31,7 @@ CloseCode PublishPlayMessage::fromJson(
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         auto data = request["data"];
         try {
-            _playManager->publish(rid, wsConnPtr, 4, move(data));
+            _playManager->publish(rid, wsConnPtr, static_cast<int>(actions::Play::publishPlayMessage), move(data));
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/stream/PublishDeathData.h>
 
 using namespace drogon;
@@ -32,10 +33,10 @@ CloseCode PublishDeathData::fromJson(
         stream->setSurvivalTime(request["data"]["survivalTime"].asUInt64());
         stream->setDead(true);
 
-        auto rid = stream->getSidsMap().begin()->first;
+        auto rid = get<string>(stream->getRid());
         auto data = request["data"];
         try {
-            _streamManager->publish(rid, wsConnPtr, 3, move(data));
+            _streamManager->publish(rid, wsConnPtr, static_cast<int>(actions::Stream::publishDeathData), move(data));
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

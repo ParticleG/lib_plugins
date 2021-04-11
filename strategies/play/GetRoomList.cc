@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/play/GetRoomList.h>
 
 using namespace drogon;
@@ -34,7 +35,7 @@ CloseCode GetRoomList::fromJson(
         }
     }
     response["type"] = "Self";
-    response["action"] = 0;
+    response["action"] = static_cast<int>(actions::Play::getRoomList);
     response["roomList"] = _playManager->parseInfo(type, begin, count);
     return CloseCode::kNormalClosure;
 }

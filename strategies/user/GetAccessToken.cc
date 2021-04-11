@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/user/GetAccessToken.h>
 #include <structures/User.h>
 #include <utils/crypto.h>
@@ -29,7 +30,7 @@ CloseCode GetAccessToken::fromJson(
         auth->setAccessToken(crypto::keccak(drogon::utils::getUuid()));
         auth->setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
         _authMapper.update(*auth);
-        response["action"] = 0;
+        response["action"] = static_cast<int>(actions::User::getAccessToken);
         response["type"] = "Self";
         response["accessToken"] = auth->getValueOfAccessToken();
     } catch (const orm::DrogonDbException &e) {

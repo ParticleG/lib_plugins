@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/stream/PublishStreamData.h>
 
 using namespace drogon;
@@ -26,10 +27,15 @@ CloseCode PublishStreamData::fromJson(
         response["type"] = "Warn";
         response["reason"] = "Wrong format: Requires string type 'stream' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Stream>()->getSidsMap().begin()->first;
+        auto stream = wsConnPtr->getContext<Stream>();
         auto data = request["data"];
         try {
-            _streamManager->publish(rid, wsConnPtr, 2, move(data));
+            _streamManager->publish(
+                    get<string>(stream->getRid()),
+                    wsConnPtr,
+                    static_cast<int>(actions::Stream::publishStreamData),
+                    move(data),
+                    stream->getSid());
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

@@ -3,6 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
+#include <strategies/actions.h>
 #include <strategies/chat/GetChannelList.h>
 
 using namespace drogon;
@@ -21,7 +22,7 @@ CloseCode GetChannelList::fromJson(
         Json::Value &response
 ) {
     response["type"] = "Self";
-    response["action"] = 0;
+    response["action"] = static_cast<int>(actions::Chat::getChannelList);
     response["roomList"] = _chatManager->parseInfo();
     return CloseCode::kNormalClosure;
 }
