@@ -5,6 +5,7 @@
 #include <plugins/HandlerManager.h>
 #include <strategies/app/GetAppVersion.h>
 #include <strategies/app/GetNotice.h>
+#include <strategies/app/ValidateAccount.h>
 #include <strategies/user/GetAccessToken.h>
 #include <strategies/user/GetUserInfo.h>
 #include <strategies/chat/GetChannelList.h>
@@ -31,42 +32,28 @@ using namespace std;
 HandlerManager::HandlerManager() : _handlerFactory(tech::structures::HandlerFactory<tech::strategies::MessageHandler>::instance()) {}
 
 void HandlerManager::initAndStart(const Json::Value &config) {
-    if (!(
-            config.isMember("App") && config["App"].isInt() &&
-            config.isMember("User") && config["User"].isInt() &&
-            config.isMember("Chat") && config["Chat"].isInt() &&
-            config.isMember("Play") && config["Play"].isInt() &&
-            config.isMember("Stream") && config["Stream"].isInt()
-    )) {
-        LOG_ERROR << R"(Requires unsigned int value "App", "User", "Chat", "Play" and "Stream" in plugin HandlerManager's config')";
-        abort();
-    }
-    auto appPrefix = static_cast<const unsigned int &>(config["App"].asInt() * 100);
-    static HandlerRegistrar<MessageHandler, GetAppVersion> getAppVersionRegistrar(appPrefix + 0);
-    static HandlerRegistrar<MessageHandler, GetNotice> getNoticeRegistrar(appPrefix + 1);
+    static HandlerRegistrar<MessageHandler, GetAppVersion> getAppVersionRegistrar(actions::Prefix::app + actions::App::getAppVersion);
+    static HandlerRegistrar<MessageHandler, GetNotice> getNoticeRegistrar(actions::Prefix::app + actions::App::getNotice);
+    static HandlerRegistrar<MessageHandler, ValidateAccount> validateAccountRegistrar(actions::Prefix::app + actions::App::validateAccount);
 
-    auto userPrefix = config["User"].asInt() * 100;
-    static HandlerRegistrar<MessageHandler, GetAccessToken> getAccessTokenRegistrar(userPrefix + 0);
-    static HandlerRegistrar<MessageHandler, GetUserInfo> getUserInfoRegistrar(userPrefix + 1);
+    static HandlerRegistrar<MessageHandler, GetAccessToken> getAccessTokenRegistrar(actions::Prefix::user + actions::User::getAccessToken);
+    static HandlerRegistrar<MessageHandler, GetUserInfo> getUserInfoRegistrar(actions::Prefix::user + actions::User::getUserInfo);
 
-    auto chatPrefix = config["Chat"].asInt() * 100;
-    static HandlerRegistrar<MessageHandler, GetChannelList> getChannelListRegistrar(chatPrefix + 0);
-    static HandlerRegistrar<MessageHandler, EnterChannel> enterChannelRegistrar(chatPrefix + 1);
-    static HandlerRegistrar<MessageHandler, LeaveChannel> leaveChannelRegistrar(chatPrefix + 2);
-    static HandlerRegistrar<MessageHandler, PublishChatMessage> publishChatMessageRegistrar(chatPrefix + 3);
+    static HandlerRegistrar<MessageHandler, GetChannelList> getChannelListRegistrar(actions::Prefix::chat + actions::Chat::getChannelList);
+    static HandlerRegistrar<MessageHandler, EnterChannel> enterChannelRegistrar(actions::Prefix::chat + actions::Chat::enterChannel);
+    static HandlerRegistrar<MessageHandler, LeaveChannel> leaveChannelRegistrar(actions::Prefix::chat + actions::Chat::leaveChannel);
+    static HandlerRegistrar<MessageHandler, PublishChatMessage> publishChatMessageRegistrar(actions::Prefix::chat + actions::Chat::publishChatMessage);
 
-    auto playPrefix = config["Play"].asInt() * 100;
-    static HandlerRegistrar<MessageHandler, GetRoomList> getRoomListRegistrar(playPrefix + 0);
-    static HandlerRegistrar<MessageHandler, CreateRoom> createRoomRegistrar(playPrefix + 1);
-    static HandlerRegistrar<MessageHandler, EnterRoom> enterRoomRegistrar(playPrefix + 2);
-    static HandlerRegistrar<MessageHandler, LeaveRoom> leaveRoomRegistrar(playPrefix + 3);
-    static HandlerRegistrar<MessageHandler, PublishPlayMessage> publishPlayMessageRegistrar(playPrefix + 4);
-    static HandlerRegistrar<MessageHandler, ChangeConfig> changeConfigRegistrar(playPrefix + 5);
-    static HandlerRegistrar<MessageHandler, ChangeReady> changeReadyRegistrar(playPrefix + 6);
+    static HandlerRegistrar<MessageHandler, GetRoomList> getRoomListRegistrar(actions::Prefix::play + actions::Play::getRoomList);
+    static HandlerRegistrar<MessageHandler, CreateRoom> createRoomRegistrar(actions::Prefix::play + actions::Play::createRoom);
+    static HandlerRegistrar<MessageHandler, EnterRoom> enterRoomRegistrar(actions::Prefix::play + actions::Play::enterRoom);
+    static HandlerRegistrar<MessageHandler, LeaveRoom> leaveRoomRegistrar(actions::Prefix::play + actions::Play::leaveRoom);
+    static HandlerRegistrar<MessageHandler, PublishPlayMessage> publishPlayMessageRegistrar(actions::Prefix::play + actions::Play::publishPlayMessage);
+    static HandlerRegistrar<MessageHandler, ChangeConfig> changeConfigRegistrar(actions::Prefix::play + actions::Play::changeConfig);
+    static HandlerRegistrar<MessageHandler, ChangeReady> changeReadyRegistrar(actions::Prefix::play + actions::Play::changeReady);
 
-    auto streamPrefix = config["Stream"].asInt() * 100;
-    static HandlerRegistrar<MessageHandler, PublishStreamData> publishStreamDataRegistrar(streamPrefix + 2);
-    static HandlerRegistrar<MessageHandler, PublishDeathData> publishDeathData(streamPrefix + 3);
+    static HandlerRegistrar<MessageHandler, PublishDeathData> publishDeathDataRegistrar(actions::Prefix::stream + actions::Stream::publishDeathData);
+    static HandlerRegistrar<MessageHandler, PublishStreamData> publishStreamDataRegistrar(actions::Prefix::stream + actions::Stream::publishStreamData);
     LOG_INFO << "HandlerManager loaded.";
 }
 
@@ -76,13 +63,13 @@ void HandlerManager::shutdown() {
 
 CloseCode HandlerManager::process(
         const WebSocketConnectionPtr &wsConnPtr,
-        const websocket::Type &type,
+        const actions::Prefix &prefix,
         int action,
         const Json::Value &request,
         Json::Value &response
 ) {
     try {
-        auto handler(_handlerFactory.getHandler(static_cast<int>(type) * 100 + action));
+        auto handler(_handlerFactory.getHandler(prefix + action));
         CloseCode code = handler->fromJson(wsConnPtr, request, response);
         return code;
     } catch (const out_of_range &e) {

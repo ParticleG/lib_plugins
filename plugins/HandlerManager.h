@@ -5,6 +5,7 @@
 #pragma once
 
 #include <drogon/plugins/Plugin.h>
+#include <strategies/actions.h>
 #include <strategies/base/MessageHandler.h>
 #include <structures/HandlerFactory.h>
 #include <utils/websocket.h>
@@ -20,7 +21,7 @@ namespace tech::plugins {
 
         drogon::CloseCode process(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
-                const tech::utils::websocket::Type &type,
+                const tech::strategies::actions::Prefix &prefix,
                 int action,
                 const Json::Value &request,
                 Json::Value &response

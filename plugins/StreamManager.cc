@@ -4,9 +4,11 @@
 
 #include <plugins/PlayManager.h>
 #include <plugins/StreamManager.h>
+#include <strategies/actions.h>
 #include <utils/misc.h>
 
 using namespace tech::plugins;
+using namespace tech::strategies;
 using namespace tech::structures;
 using namespace tech::utils;
 using namespace drogon;
@@ -22,39 +24,44 @@ void StreamManager::shutdown() {
 
 void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connection) {
     auto sharedRoom = getSharedRoom(rid);
+    auto stream = _getStream(connection);
     if (sharedRoom.room.getStart()) {
-        throw invalid_argument("Room already started");
+        stream->setWatch(true);
     }
     sharedRoom.room.subscribe(connection);
 
     Json::Value message;
     message["type"] = "Broadcast";
-    message["action"] = 2;
-    message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
-    sharedRoom.room.publish(move(message));
+    message["action"] = static_cast<int>(actions::Stream::enterRoom);
+    message["data"] = stream->parsePlayerInfo(Json::objectValue);
+    sharedRoom.room.publish(move(message), stream->getSid());
     _checkReady(rid);
 }
 
 void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &connection) {
     {
+        auto playerInfo = _getStream(connection)->parsePlayerInfo(Json::objectValue);
         auto sharedRoom = getSharedRoom(rid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
-            Json::Value message, response;
-            message["type"] = "Broadcast";
-            message["action"] = 3;
-            message["data"] = _getStream(connection)->parsePlayerInfo(Json::objectValue);
-            sharedRoom.room.publish(move(message));
+            _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
+            _checkFinished(rid);    // TODO: Ensure this is working properly.
 
-            if (connection->connected()) {
-                response["type"] = "Self";
-                response["action"] = 3;
-                connection->send(websocket::fromJson(response));
-            }
-            return;
+            Json::Value message;
+            message["type"] = "Broadcast";
+            message["action"] = static_cast<int>(actions::Stream::leaveRoom);
+            message["data"] = playerInfo;
+            sharedRoom.room.publish(move(message));
         }
     }
-    if (getSharedRoom(rid).room.isEmpty()) { // TODO: Check if thread safe
+    if (connection->connected()) {
+        Json::Value response;
+        response["type"] = "Self";
+        response["action"] = static_cast<int>(actions::Stream::leaveRoom);
+        response["data"] = Json::objectValue;
+        connection->send(websocket::fromJson(response));
+    }
+    if (getSharedRoom(rid).room.isEmpty()) {
         removeRoom(rid);
     }
 }
@@ -66,11 +73,10 @@ void StreamManager::publish(
         Json::Value &&data
 ) {
     auto sharedRoom = getSharedRoom(rid);
-
-    if (action == 4) {
+    if (action == static_cast<int>(actions::Stream::publishDeathData)) {
         _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
+        _checkFinished(rid);
     }
-
     Json::Value response;
     response["type"] = "Broadcast";
     response["action"] = action;
@@ -86,14 +92,15 @@ void StreamManager::publish(
         const uint64_t &excluded
 ) {
     auto sharedRoom = getSharedRoom(rid);
+    if (action == static_cast<int>(actions::Stream::publishDeathData)) {
+        _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
+        _checkFinished(rid);
+    }
     Json::Value response;
     response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getStream(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
     sharedRoom.room.publish(move(response), excluded);
-    if (action == 4) {
-        _checkFinished(rid);
-    }
 }
 
 Json::Value StreamManager::parseInfo() const {
@@ -111,22 +118,20 @@ shared_ptr<Stream> StreamManager::_getStream(const drogon::WebSocketConnectionPt
 }
 
 void StreamManager::_checkReady(const string &rid) {
-    bool allReady = true;
+    bool allReady;
     {
         auto sharedRoom = getSharedRoom(rid);
-        if (!sharedRoom.room.isFull()) {
-            allReady = false;
-        }
+        allReady = sharedRoom.room.checkReady();
     }
     if (allReady) {
-        thread([this, rid]() { // TODO: is room safe here?
+        thread([this, rid]() {
             try {
                 auto sharedRoom = getSharedRoom(rid);
-                this_thread::sleep_for(chrono::seconds(1));
                 sharedRoom.room.setStart(true);
+                this_thread::sleep_for(chrono::seconds(1));
                 Json::Value response;
                 response["type"] = "Server";
-                response["action"] = 0;
+                response["action"] = static_cast<int>(actions::Stream::startStreaming);
                 response["data"]["seed"] = misc::uniform_random();
                 sharedRoom.room.publish(move(response));
             } catch (const exception &error) {
@@ -139,28 +144,30 @@ void StreamManager::_checkReady(const string &rid) {
 
 void StreamManager::_checkFinished(const string &rid) {
     if (getSharedRoom(rid).room.checkFinished()) {
-        thread([this, rid]() { // TODO: is room safe here?
+        thread([this, rid]() {
             try {
-                auto sharedRoom = getSharedRoom(rid);
-                this_thread::sleep_for(chrono::seconds(3));
-                Json::Value response, result;
-                response["type"] = "Server";
-                response["action"] = 1;
-                sharedRoom.room.publish(move(response));
+                {
+                    auto sharedRoom = getSharedRoom(rid);
+                    this_thread::sleep_for(chrono::seconds(3));
+                    Json::Value response, result;
+                    response["type"] = "Server";
+                    response["action"] = static_cast<int>(actions::Stream::endStreaming);
+                    sharedRoom.room.publish(move(response));
 
-                auto playManager = app().getPlugin<PlayManager>();
-                result["start"] = false;
-                result["result"] = sharedRoom.room.getDeaths();
-                playManager->publish(rid, 9, move(result));
-
+                    auto playManager = app().getPlugin<PlayManager>();
+                    result["start"] = false;
+                    result["result"] = sharedRoom.room.getDeaths();
+                    playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame), move(result));
+                    {
+                        auto sharedPlayRoom = playManager->getSharedRoom(sharedRoom.room.getPlayRid());
+                        sharedPlayRoom.room.setStart(false);
+                    }
+                }
                 this_thread::sleep_for(chrono::seconds(3));
-                auto streamManager = app().getPlugin<StreamManager>();
-                streamManager->removeRoom(rid); // TODO: Check if is websocket friendly.
+                removeRoom(rid);
             } catch (const exception &error) {
                 LOG_FATAL << error.what();
-                abort();
             }
-
         }).detach();
     }
 }
