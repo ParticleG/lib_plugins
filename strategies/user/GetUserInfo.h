@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include <models/Auth.h>
 #include <models/Info.h>
 #include <strategies/base/MessageHandler.h>
 
