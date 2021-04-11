@@ -27,7 +27,7 @@ CloseCode PublishPlayMessage::fromJson(
         response["type"] = "Warn";
         response["reason"] = "Wrong format: Requires string type 'message' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
+        auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         auto data = request["data"];
         try {
             _playManager->publish(rid, wsConnPtr, 4, move(data));
