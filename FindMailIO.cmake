@@ -1,0 +1,2 @@
+find_path(MAILIO_INCLUDE_DIR mailio PATHS ENV VCPKG_ROOT)
+find_file(MAILIO_LIB lib/mailio.lib PATHS ENV VCPKG_ROOT)
