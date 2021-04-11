@@ -27,7 +27,7 @@ CloseCode ChangeReady::fromJson(
         response["type"] = "Warn";
         response["reason"] = "Wrong format: Requires bool type 'ready' in 'data'";
     } else {
-        auto rid = wsConnPtr->getContext<Play>()->getSidsMap().begin()->first;
+        auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         try {
             _playManager->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
             return CloseCode::kNone;
