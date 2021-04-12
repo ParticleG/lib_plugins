@@ -29,31 +29,31 @@ using namespace tech::utils;
 using namespace drogon;
 using namespace std;
 
-HandlerManager::HandlerManager() : _handlerFactory(tech::structures::HandlerFactory<tech::strategies::MessageHandler>::instance()) {}
+HandlerManager::HandlerManager() {}
 
 void HandlerManager::initAndStart(const Json::Value &config) {
-    static HandlerRegistrar<MessageHandler, GetAppVersion> getAppVersionRegistrar(actions::Prefix::app + actions::App::getAppVersion);
-    static HandlerRegistrar<MessageHandler, GetNotice> getNoticeRegistrar(actions::Prefix::app + actions::App::getNotice);
-    static HandlerRegistrar<MessageHandler, ValidateAccount> validateAccountRegistrar(actions::Prefix::app + actions::App::validateAccount);
+    _handlerFactory.registerHandler<GetAppVersion>(actions::Prefix::app + actions::App::getAppVersion);
+    _handlerFactory.registerHandler<GetNotice>(actions::Prefix::app + actions::App::getNotice);
+    _handlerFactory.registerHandler<ValidateAccount>(actions::Prefix::app + actions::App::validateAccount);
 
-    static HandlerRegistrar<MessageHandler, GetAccessToken> getAccessTokenRegistrar(actions::Prefix::user + actions::User::getAccessToken);
-    static HandlerRegistrar<MessageHandler, GetUserInfo> getUserInfoRegistrar(actions::Prefix::user + actions::User::getUserInfo);
+    _handlerFactory.registerHandler<GetAccessToken>(actions::Prefix::user + actions::User::getAccessToken);
+    _handlerFactory.registerHandler<GetUserInfo>(actions::Prefix::user + actions::User::getUserInfo);
 
-    static HandlerRegistrar<MessageHandler, GetChannelList> getChannelListRegistrar(actions::Prefix::chat + actions::Chat::getChannelList);
-    static HandlerRegistrar<MessageHandler, EnterChannel> enterChannelRegistrar(actions::Prefix::chat + actions::Chat::enterChannel);
-    static HandlerRegistrar<MessageHandler, LeaveChannel> leaveChannelRegistrar(actions::Prefix::chat + actions::Chat::leaveChannel);
-    static HandlerRegistrar<MessageHandler, PublishChatMessage> publishChatMessageRegistrar(actions::Prefix::chat + actions::Chat::publishChatMessage);
+    _handlerFactory.registerHandler<GetChannelList>(actions::Prefix::chat + actions::Chat::getChannelList);
+    _handlerFactory.registerHandler<EnterChannel>(actions::Prefix::chat + actions::Chat::enterChannel);
+    _handlerFactory.registerHandler<LeaveChannel>(actions::Prefix::chat + actions::Chat::leaveChannel);
+    _handlerFactory.registerHandler<PublishChatMessage>(actions::Prefix::chat + actions::Chat::publishChatMessage);
 
-    static HandlerRegistrar<MessageHandler, GetRoomList> getRoomListRegistrar(actions::Prefix::play + actions::Play::getRoomList);
-    static HandlerRegistrar<MessageHandler, CreateRoom> createRoomRegistrar(actions::Prefix::play + actions::Play::createRoom);
-    static HandlerRegistrar<MessageHandler, EnterRoom> enterRoomRegistrar(actions::Prefix::play + actions::Play::enterRoom);
-    static HandlerRegistrar<MessageHandler, LeaveRoom> leaveRoomRegistrar(actions::Prefix::play + actions::Play::leaveRoom);
-    static HandlerRegistrar<MessageHandler, PublishPlayMessage> publishPlayMessageRegistrar(actions::Prefix::play + actions::Play::publishPlayMessage);
-    static HandlerRegistrar<MessageHandler, ChangeConfig> changeConfigRegistrar(actions::Prefix::play + actions::Play::changeConfig);
-    static HandlerRegistrar<MessageHandler, ChangeReady> changeReadyRegistrar(actions::Prefix::play + actions::Play::changeReady);
+    _handlerFactory.registerHandler<GetRoomList>(actions::Prefix::play + actions::Play::getRoomList);
+    _handlerFactory.registerHandler<CreateRoom>(actions::Prefix::play + actions::Play::createRoom);
+    _handlerFactory.registerHandler<EnterRoom>(actions::Prefix::play + actions::Play::enterRoom);
+    _handlerFactory.registerHandler<LeaveRoom>(actions::Prefix::play + actions::Play::leaveRoom);
+    _handlerFactory.registerHandler<PublishPlayMessage>(actions::Prefix::play + actions::Play::publishPlayMessage);
+    _handlerFactory.registerHandler<ChangeConfig>(actions::Prefix::play + actions::Play::changeConfig);
+    _handlerFactory.registerHandler<ChangeReady>(actions::Prefix::play + actions::Play::changeReady);
 
-    static HandlerRegistrar<MessageHandler, PublishDeathData> publishDeathDataRegistrar(actions::Prefix::stream + actions::Stream::publishDeathData);
-    static HandlerRegistrar<MessageHandler, PublishStreamData> publishStreamDataRegistrar(actions::Prefix::stream + actions::Stream::publishStreamData);
+    _handlerFactory.registerHandler<PublishDeathData>(actions::Prefix::stream + actions::Stream::publishDeathData);
+    _handlerFactory.registerHandler<PublishStreamData>(actions::Prefix::stream + actions::Stream::publishStreamData);
     LOG_INFO << "HandlerManager loaded.";
 }
 
@@ -69,8 +69,8 @@ CloseCode HandlerManager::process(
         Json::Value &response
 ) {
     try {
-        auto handler(_handlerFactory.getHandler(prefix + action));
-        CloseCode code = handler->fromJson(wsConnPtr, request, response);
+        auto &handler = _handlerFactory.getHandler(prefix + action);
+        CloseCode code = handler.fromJson(wsConnPtr, request, response);
         return code;
     } catch (const out_of_range &e) {
         response["type"] = "Warn";

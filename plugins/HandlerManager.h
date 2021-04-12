@@ -28,6 +28,6 @@ namespace tech::plugins {
         );
 
     private:
-        tech::structures::HandlerFactory<tech::strategies::MessageHandler> &_handlerFactory;
+        tech::structures::HandlerFactory<tech::strategies::MessageHandler> _handlerFactory;
     };
 }
