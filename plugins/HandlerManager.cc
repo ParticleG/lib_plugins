@@ -29,7 +29,7 @@ using namespace tech::utils;
 using namespace drogon;
 using namespace std;
 
-HandlerManager::HandlerManager() {}
+HandlerManager::HandlerManager() = default;
 
 void HandlerManager::initAndStart(const Json::Value &config) {
     _handlerFactory.registerHandler<GetAppVersion>(actions::Prefix::app + actions::App::getAppVersion);
