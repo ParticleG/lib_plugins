@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-PublishPlayMessage::PublishPlayMessage() : _playManager(app().getPlugin<PlayManager>()) {}
+PublishPlayMessage::PublishPlayMessage()= default;
 
 CloseCode PublishPlayMessage::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -31,7 +31,7 @@ CloseCode PublishPlayMessage::fromJson(
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         auto data = request["data"];
         try {
-            _playManager->publish(rid, wsConnPtr, static_cast<int>(actions::Play::publishPlayMessage), move(data));
+            app().getPlugin<PlayManager>()->publish(rid, wsConnPtr, static_cast<int>(actions::Play::publishPlayMessage), move(data));
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

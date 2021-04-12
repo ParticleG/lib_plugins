@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-LeaveChannel::LeaveChannel() : _chatManager(app().getPlugin<ChatManager>()) {}
+LeaveChannel::LeaveChannel()= default;
 
 CloseCode LeaveChannel::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -29,7 +29,7 @@ CloseCode LeaveChannel::fromJson(
     } else {
         auto rid = request["data"]["rid"].asString();
         try {
-            _chatManager->unsubscribe(rid, wsConnPtr);
+            app().getPlugin<ChatManager>()->unsubscribe(rid, wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

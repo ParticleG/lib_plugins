@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-PublishChatMessage::PublishChatMessage() : _chatManager(app().getPlugin<ChatManager>()) {}
+PublishChatMessage::PublishChatMessage() = default;
 
 CloseCode PublishChatMessage::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -31,7 +31,7 @@ CloseCode PublishChatMessage::fromJson(
         auto rid = request["data"]["rid"].asString();
         auto message = request["data"]["message"].asString();
         try {
-            _chatManager->publish(rid, wsConnPtr, message);
+            app().getPlugin<ChatManager>()->publish(rid, wsConnPtr, message);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

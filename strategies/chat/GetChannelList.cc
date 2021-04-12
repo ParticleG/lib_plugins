@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-GetChannelList::GetChannelList() : _chatManager(app().getPlugin<ChatManager>()) {}
+GetChannelList::GetChannelList() = default;
 
 CloseCode GetChannelList::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -23,6 +23,6 @@ CloseCode GetChannelList::fromJson(
 ) {
     response["type"] = "Self";
     response["action"] = static_cast<int>(actions::Chat::getChannelList);
-    response["roomList"] = _chatManager->parseInfo();
+    response["roomList"] = app().getPlugin<ChatManager>()->parseInfo();
     return CloseCode::kNormalClosure;
 }

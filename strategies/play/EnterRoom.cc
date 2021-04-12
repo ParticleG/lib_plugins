@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-EnterRoom::EnterRoom() : _playManager(app().getPlugin<PlayManager>()) {}
+EnterRoom::EnterRoom()  = default;
 
 CloseCode EnterRoom::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -35,7 +35,7 @@ CloseCode EnterRoom::fromJson(
             password = request["data"]["password"].asString();
         }
         try {
-            _playManager->subscribe(rid, password, wsConnPtr);
+            app().getPlugin<PlayManager>()->subscribe(rid, password, wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

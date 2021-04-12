@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-PublishStreamData::PublishStreamData() : _streamManager(app().getPlugin<StreamManager>()) {}
+PublishStreamData::PublishStreamData() = default;
 
 CloseCode PublishStreamData::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -28,9 +28,15 @@ CloseCode PublishStreamData::fromJson(
         response["reason"] = "Wrong format: Requires string type 'stream' in 'data'";
     } else {
         auto stream = wsConnPtr->getContext<Stream>();
+        if(!stream){
+            LOG_FATAL << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() <<"] Get 'Stream' failed";
+            response["type"] = "Error";
+            response["reason"] = "Get 'Stream' failed (nullptr)";
+            return CloseCode::kUnexpectedCondition;
+        }
         auto data = request["data"];
         try {
-            _streamManager->publish(
+            app().getPlugin<StreamManager>()->publish(
                     get<string>(stream->getRid()),
                     wsConnPtr,
                     static_cast<int>(actions::Stream::publishStreamData),

@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-ChangeConfig::ChangeConfig() : _playManager(app().getPlugin<PlayManager>()) {}
+ChangeConfig::ChangeConfig() = default;
 
 CloseCode ChangeConfig::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -29,7 +29,7 @@ CloseCode ChangeConfig::fromJson(
     } else {
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         try {
-            _playManager->changeConfig(rid, request["data"]["config"].asString(), wsConnPtr);
+            app().getPlugin<PlayManager>()->changeConfig(rid, request["data"]["config"].asString(), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

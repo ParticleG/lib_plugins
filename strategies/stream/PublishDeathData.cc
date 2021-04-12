@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-PublishDeathData::PublishDeathData() : _streamManager(app().getPlugin<StreamManager>()) {}
+PublishDeathData::PublishDeathData() = default;
 
 CloseCode PublishDeathData::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -36,7 +36,7 @@ CloseCode PublishDeathData::fromJson(
         auto rid = get<string>(stream->getRid());
         auto data = request["data"];
         try {
-            _streamManager->publish(rid, wsConnPtr, static_cast<int>(actions::Stream::publishDeathData), move(data));
+            app().getPlugin<StreamManager>()->publish(rid, wsConnPtr, static_cast<int>(actions::Stream::publishDeathData), move(data));
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

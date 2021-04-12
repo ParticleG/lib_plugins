@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-LeaveRoom::LeaveRoom() : _playManager(app().getPlugin<PlayManager>()) {}
+LeaveRoom::LeaveRoom()= default;
 
 CloseCode LeaveRoom::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -21,7 +21,7 @@ CloseCode LeaveRoom::fromJson(
         Json::Value &response
 ) {
     try {
-        _playManager->unsubscribe(get<string>(wsConnPtr->getContext<Play>()->getRid()), wsConnPtr);
+        app().getPlugin<PlayManager>()->unsubscribe(get<string>(wsConnPtr->getContext<Play>()->getRid()), wsConnPtr);
         return CloseCode::kNone;
     } catch (const exception &error) {
         response["type"] = "Warn";

@@ -16,7 +16,5 @@ namespace tech::strategies {
                 const Json::Value &request,
                 Json::Value &response
         ) override;
-    private:
-        std::shared_ptr<tech::plugins::StreamManager> _streamManager;
     };
 }

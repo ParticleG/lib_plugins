@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-GetRoomList::GetRoomList() : _playManager(app().getPlugin<PlayManager>()) {}
+GetRoomList::GetRoomList()  = default;
 
 CloseCode GetRoomList::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -36,6 +36,6 @@ CloseCode GetRoomList::fromJson(
     }
     response["type"] = "Self";
     response["action"] = static_cast<int>(actions::Play::getRoomList);
-    response["roomList"] = _playManager->parseInfo(type, begin, count);
+    response["roomList"] = app().getPlugin<PlayManager>()->parseInfo(type, begin, count);
     return CloseCode::kNormalClosure;
 }

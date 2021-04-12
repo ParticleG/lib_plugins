@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-ChangeReady::ChangeReady() : _playManager(app().getPlugin<PlayManager>()) {}
+ChangeReady::ChangeReady() {}
 
 CloseCode ChangeReady::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -29,7 +29,7 @@ CloseCode ChangeReady::fromJson(
     } else {
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         try {
-            _playManager->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
+            app().getPlugin<PlayManager>()->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

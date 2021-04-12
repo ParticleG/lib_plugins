@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-CreateRoom::CreateRoom() : _playManager(app().getPlugin<PlayManager>()) {}
+CreateRoom::CreateRoom() = default;
 
 CloseCode CreateRoom::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -47,7 +47,8 @@ CloseCode CreateRoom::fromJson(
         wsConnPtr->getContext<Play>()->setConfig(request["data"]["config"].asString());
 
         try {
-            auto capacity = _playManager->getCapacity(type);
+            auto playManager = app().getPlugin<PlayManager>();
+            auto capacity = playManager->getCapacity(type);
             auto rid = crypto::blake2b(drogon::utils::getUuid());
             auto room = PlayRoom(
                     rid,
@@ -56,8 +57,8 @@ CloseCode CreateRoom::fromJson(
                     password,
                     capacity
             );
-            _playManager->createRoom(move(room));
-            _playManager->subscribe(rid, password, wsConnPtr);
+            playManager->createRoom(move(room));
+            playManager->subscribe(rid, password, wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";
