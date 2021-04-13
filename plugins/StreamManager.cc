@@ -61,9 +61,6 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
         response["data"] = Json::objectValue;
         connection->send(websocket::fromJson(response));
     }
-    if (getSharedRoom(rid).room.isEmpty()) {
-        removeRoom(rid);
-    }
 }
 
 void StreamManager::publish(
@@ -143,31 +140,37 @@ void StreamManager::_checkReady(const string &rid) {
 }
 
 void StreamManager::_checkFinished(const string &rid) {
-    if (getSharedRoom(rid).room.checkFinished()) {
-        thread([this, rid]() {
-            try {
-                {
-                    auto sharedRoom = getSharedRoom(rid);
-                    this_thread::sleep_for(chrono::seconds(3));
-                    Json::Value response, result;
-                    response["type"] = "Server";
-                    response["action"] = static_cast<int>(actions::Stream::endStreaming);
-                    sharedRoom.room.publish(move(response));
-
-                    auto playManager = app().getPlugin<PlayManager>();
-                    result["start"] = false;
-                    result["result"] = sharedRoom.room.getDeaths();
-                    playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame), move(result));
+    try{
+        auto sharedRoom = getSharedRoom(rid);
+        if (!sharedRoom.room.getFinish() && sharedRoom.room.checkFinished()) {
+            sharedRoom.room.setFinish(true);
+            thread([this, rid]() {
+                try {
                     {
-                        auto sharedPlayRoom = playManager->getSharedRoom(sharedRoom.room.getPlayRid());
-                        sharedPlayRoom.room.setStart(false);
+                        auto sharedRoom = getSharedRoom(rid);
+                        this_thread::sleep_for(chrono::seconds(3));
+                        Json::Value response, result;
+                        response["type"] = "Server";
+                        response["action"] = static_cast<int>(actions::Stream::endStreaming);
+                        sharedRoom.room.publish(move(response));
+
+                        auto playManager = app().getPlugin<PlayManager>();
+                        result["start"] = false;
+                        result["result"] = sharedRoom.room.getDeaths();
+                        playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame), move(result));
+                        {
+                            auto sharedPlayRoom = playManager->getSharedRoom(sharedRoom.room.getPlayRid());
+                            sharedPlayRoom.room.setStart(false);
+                        }
                     }
+                    this_thread::sleep_for(chrono::seconds(3));
+                    removeRoom(rid);
+                } catch (const exception &error) {
+                    LOG_FATAL << error.what();
                 }
-                this_thread::sleep_for(chrono::seconds(3));
-                removeRoom(rid);
-            } catch (const exception &error) {
-                LOG_FATAL << error.what();
-            }
-        }).detach();
+            }).detach();
+        }
+    } catch (const exception &error) {
+        LOG_WARN << error.what();
     }
 }
