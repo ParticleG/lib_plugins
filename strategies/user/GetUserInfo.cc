@@ -21,7 +21,7 @@ drogon::CloseCode GetUserInfo::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    int64_t id = wsConnPtr->getContext<User>()->getInfo()->getValueOfId();
+    int64_t id = wsConnPtr->getContext<User>()->getInfo().getValueOfId();
     std::string hash;
     if (request.isMember("data") && request["data"].isObject()) {
         if (request["data"].isMember("uid") && request["data"]["uid"].isInt()) {

@@ -27,12 +27,12 @@ CloseCode GetAccessToken::fromJson(
     try {
         auto auth = wsConnPtr->getContext<User>()->getAuth();
         auto *configurator = app().getPlugin<Configurator>();
-        auth->setAccessToken(crypto::keccak(drogon::utils::getUuid()));
-        auth->setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
-        _authMapper.update(*auth);
+        auth.setAccessToken(crypto::keccak(drogon::utils::getUuid()));
+        auth.setAccessTokenExpireTime(misc::fromDate(configurator->getAccessExpire()));
+        _authMapper.update(auth);
         response["action"] = static_cast<int>(actions::User::getAccessToken);
         response["type"] = "Self";
-        response["accessToken"] = auth->getValueOfAccessToken();
+        response["accessToken"] = auth.getValueOfAccessToken();
     } catch (const orm::DrogonDbException &e) {
         LOG_ERROR << "error:" << e.base().what();
         response["type"] = "Error";
