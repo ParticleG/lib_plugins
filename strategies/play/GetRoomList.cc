@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-GetRoomList::GetRoomList()  = default;
+GetRoomList::GetRoomList() = default;
 
 CloseCode GetRoomList::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

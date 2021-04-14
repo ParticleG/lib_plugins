@@ -11,6 +11,7 @@ namespace tech::strategies {
     class CreateRoom : public MessageHandler {
     public:
         CreateRoom();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

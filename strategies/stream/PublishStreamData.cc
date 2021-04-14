@@ -5,6 +5,7 @@
 #include <plugins/Configurator.h>
 #include <strategies/actions.h>
 #include <strategies/stream/PublishStreamData.h>
+#include <utils/misc.h>
 
 using namespace drogon;
 using namespace tech::plugins;
@@ -28,8 +29,8 @@ CloseCode PublishStreamData::fromJson(
         response["reason"] = "Wrong format: Requires string type 'stream' in 'data'";
     } else {
         auto stream = wsConnPtr->getContext<Stream>();
-        if(!stream){
-            LOG_FATAL << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() <<"] Get 'Stream' failed";
+        if (!stream) {
+            misc::logger(typeid(*this).name(), "Get 'Stream' failed");
             response["type"] = "Error";
             response["reason"] = "Get 'Stream' failed (nullptr)";
             return CloseCode::kUnexpectedCondition;

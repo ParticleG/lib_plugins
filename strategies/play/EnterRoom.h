@@ -11,6 +11,7 @@ namespace tech::strategies {
     class EnterRoom : public MessageHandler {
     public:
         EnterRoom();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

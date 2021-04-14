@@ -11,6 +11,7 @@ namespace tech::strategies {
     class GetRoomList : public MessageHandler {
     public:
         GetRoomList();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

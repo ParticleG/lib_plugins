@@ -11,6 +11,7 @@ namespace tech::strategies {
     class ChangeConfig : public MessageHandler {
     public:
         ChangeConfig();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

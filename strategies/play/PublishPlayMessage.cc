@@ -14,7 +14,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-PublishPlayMessage::PublishPlayMessage()= default;
+PublishPlayMessage::PublishPlayMessage() = default;
 
 CloseCode PublishPlayMessage::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

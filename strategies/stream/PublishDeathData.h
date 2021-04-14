@@ -11,6 +11,7 @@ namespace tech::strategies {
     class PublishDeathData : public MessageHandler {
     public:
         PublishDeathData();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

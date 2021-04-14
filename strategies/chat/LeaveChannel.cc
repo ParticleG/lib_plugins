@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-LeaveChannel::LeaveChannel()= default;
+LeaveChannel::LeaveChannel() = default;
 
 CloseCode LeaveChannel::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

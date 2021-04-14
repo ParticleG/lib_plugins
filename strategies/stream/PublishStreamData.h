@@ -11,6 +11,7 @@ namespace tech::strategies {
     class PublishStreamData : public MessageHandler {
     public:
         PublishStreamData();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-LeaveRoom::LeaveRoom()= default;
+LeaveRoom::LeaveRoom() = default;
 
 CloseCode LeaveRoom::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

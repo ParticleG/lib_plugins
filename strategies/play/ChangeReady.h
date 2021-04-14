@@ -11,6 +11,7 @@ namespace tech::strategies {
     class ChangeReady : public MessageHandler {
     public:
         ChangeReady();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

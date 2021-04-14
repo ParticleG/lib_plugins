@@ -11,6 +11,7 @@ namespace tech::strategies {
     class LeaveRoom : public MessageHandler {
     public:
         LeaveRoom();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

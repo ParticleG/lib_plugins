@@ -140,7 +140,7 @@ void StreamManager::_checkReady(const string &rid) {
 }
 
 void StreamManager::_checkFinished(const string &rid) {
-    try{
+    try {
         auto sharedRoom = getSharedRoom(rid);
         if (!sharedRoom.room.getFinish() && sharedRoom.room.checkFinished()) {
             sharedRoom.room.setFinish(true);

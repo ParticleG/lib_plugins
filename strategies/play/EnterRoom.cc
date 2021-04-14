@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-EnterRoom::EnterRoom()  = default;
+EnterRoom::EnterRoom() = default;
 
 CloseCode EnterRoom::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

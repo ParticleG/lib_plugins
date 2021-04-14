@@ -11,6 +11,7 @@ namespace tech::strategies {
     class EnterChannel : public MessageHandler {
     public:
         EnterChannel();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

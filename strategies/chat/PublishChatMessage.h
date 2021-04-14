@@ -11,6 +11,7 @@ namespace tech::strategies {
     class PublishChatMessage : public MessageHandler {
     public:
         PublishChatMessage();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

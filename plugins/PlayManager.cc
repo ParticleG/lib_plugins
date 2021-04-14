@@ -40,8 +40,8 @@ void PlayManager::shutdown() {
 }
 
 uint64_t PlayManager::getCapacity(const string &type) const {
+    misc::logger(typeid(*this).name(), "Try get room capacity: " + type);
     shared_lock<shared_mutex> lock(_sharedMutex);
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try get room capacity: " << type;
     auto iter = _typesMap.find(type);
     if (iter != _typesMap.end()) {
         return iter->second;
@@ -54,12 +54,13 @@ void PlayManager::subscribe(
         const string &password,
         const WebSocketConnectionPtr &connection
 ) {
+    misc::logger(typeid(*this).name(),
+                 "Try subscribe a player: (" + rid + ") " +
+                 websocket::fromJson(_getPlay(connection)->parsePlayerInfo(Json::objectValue)));
     auto sharedRoom = getSharedRoom(rid);
     if (!sharedRoom.room.checkPassword(password)) {
         throw invalid_argument("Password is incorrect");
     }
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try subscribe a player: (" << rid << ") "
-              << websocket::fromJson(_getPlay(connection)->parsePlayerInfo(Json::objectValue));
     sharedRoom.room.subscribe(connection);
     auto play = _getPlay(connection);
 
@@ -84,9 +85,11 @@ void PlayManager::subscribe(
 }
 
 void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &connection) {
+    misc::logger(typeid(*this).name(),
+                 "Try unsubscribe a player: (" + rid + ") " +
+                 websocket::fromJson(_getPlay(connection)->parsePlayerInfo(Json::objectValue)));
     {
         auto playerInfo = _getPlay(connection)->parsePlayerInfo(Json::objectValue);
-        LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try unsubscribe a player: (" << rid << ") " << websocket::fromJson(playerInfo);
         auto sharedRoom = getSharedRoom(rid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
@@ -102,11 +105,10 @@ void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &c
         response["type"] = "Self";
         response["action"] = static_cast<int>(actions::Play::leaveRoom);
         response["data"] = Json::objectValue;
-        LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Leave room: " << websocket::fromJson(response);
         connection->send(websocket::fromJson(response));
     }
     if (getSharedRoom(rid).room.isEmpty()) { // TODO: Check if thread safe
-        LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try remove room when last player left: " << rid;
+        misc::logger(typeid(*this).name(), "Try remove room when last player left: " + rid);
         removeRoom(rid);
     }
 }
@@ -120,7 +122,7 @@ void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value
     response["type"] = "Server";
     response["action"] = action;
     response["data"] = move(data);
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Server: " << websocket::fromJson(response);
+    misc::logger(typeid(*this).name(), "Server: " + websocket::fromJson(response));
     sharedRoom.room.publish(action, move(response));
 }
 
@@ -136,7 +138,7 @@ void PlayManager::publish(
     response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getPlay(connection)->parsePlayerInfo(move(data));
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Broadcast: " << websocket::fromJson(response);
+    misc::logger(typeid(*this).name(), "Broadcast: " + websocket::fromJson(response));
     sharedRoom.room.publish(action, move(response));
 }
 
@@ -152,7 +154,7 @@ void PlayManager::publish(
     response["type"] = "Broadcast";
     response["action"] = action;
     response["data"] = _getPlay(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Exclude broadcast: " << websocket::fromJson(response);
+    misc::logger(typeid(*this).name(), "Exclude broadcast: " + websocket::fromJson(response));
     sharedRoom.room.publish(action, move(response), excluded);
 }
 
@@ -161,7 +163,7 @@ void PlayManager::changeConfig(
         string &&config,
         const WebSocketConnectionPtr &connection
 ) {
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Changing config: (" << rid << ") " << config;
+    misc::logger(typeid(*this).name(), "Changing config: (" + rid + ") " + config);
     auto play = _getPlay(connection);
     Json::Value data;
     data["config"] = config;
@@ -174,7 +176,7 @@ void PlayManager::changeReady(
         const bool &ready,
         const WebSocketConnectionPtr &connection
 ) {
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Changing ready: (" << rid << ") " << ready;
+    misc::logger(typeid(*this).name(), "Changing config: (" + rid + ") " + to_string(ready));
     auto play = _getPlay(connection);
     Json::Value data;
     data["ready"] = ready;
@@ -188,7 +190,7 @@ Json::Value PlayManager::parseInfo(
         const unsigned int &begin,
         const unsigned int &count
 ) const {
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try parsing manager info: (" << type << ") " << count;
+    misc::logger(typeid(*this).name(), "Try parsing manager info: (" + type + ") " + to_string(count));
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
     if (begin < _idsMap.size()) {
@@ -208,7 +210,7 @@ Json::Value PlayManager::parseInfo(
             ++counter;
         }
     }
-    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Parsed manager info: " << websocket::fromJson(info);
+    misc::logger(typeid(*this).name(), "Parsed manager info: " + websocket::fromJson(info));
     return info;
 }
 
@@ -233,8 +235,8 @@ void PlayManager::_checkReady(const std::string &rid) {
     if (getSharedRoom(rid).room.checkReady()) {
         thread([this, rid]() {
             try {
+                misc::logger(typeid(*this).name(), "Try Check room ready within 2 seconds: " + rid);
                 auto sharedRoom = getSharedRoom(rid);
-                LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try Check room ready within 2 seconds: " << rid;
                 for (unsigned int milliseconds = 0; milliseconds < 200; ++milliseconds) {
                     this_thread::sleep_for(chrono::milliseconds(10));
                     if (!sharedRoom.room.checkReady()) {
@@ -242,7 +244,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                         return;
                     }
                 }
-                LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try set room start: " << rid;
+                misc::logger(typeid(*this).name(), "Try set room start: " + rid);
                 sharedRoom.room.setStart(true);
                 auto streamManager = app().getPlugin<StreamManager>();
                 auto srid = crypto::blake2b(drogon::utils::getUuid());
@@ -253,7 +255,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                             sharedRoom.room.getCount(),
                             sharedRoom.room.getCapacity()
                     );
-                    LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try create stream room: " << srid;
+                    misc::logger(typeid(*this).name(), "Try create stream room: " + srid);
                     streamManager->createRoom(move(streamRoom));
                 } catch (const exception &error) {
                     LOG_FATAL << error.what();
@@ -265,7 +267,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                 response["data"]["rid"] = srid;
                 sharedRoom.room.publish(static_cast<int>(actions::Play::startGame), move(response));
                 sharedRoom.room.setPendingStart(false);
-                LOG_DEBUG << "(" << GetCurrentThreadId() << ")[" << typeid(*this).name() << "] Try reset room ready: " << rid;
+                misc::logger(typeid(*this).name(), "Try reset room ready: " + rid);
                 sharedRoom.room.resetReady();
             } catch (const exception &error) {
                 LOG_FATAL << error.what();

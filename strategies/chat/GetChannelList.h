@@ -11,6 +11,7 @@ namespace tech::strategies {
     class GetChannelList : public MessageHandler {
     public:
         GetChannelList();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

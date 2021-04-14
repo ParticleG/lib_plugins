@@ -11,6 +11,7 @@ namespace tech::strategies {
     class LeaveChannel : public MessageHandler {
     public:
         LeaveChannel();
+
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
                 const Json::Value &request,

@@ -13,7 +13,7 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-EnterChannel::EnterChannel()= default;
+EnterChannel::EnterChannel() = default;
 
 CloseCode EnterChannel::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
