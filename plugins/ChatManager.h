@@ -26,7 +26,6 @@ namespace tech::plugins {
         Json::Value parseInfo() const;
 
     private:
-
         static std::shared_ptr<tech::structures::Chat> _getChat(const drogon::WebSocketConnectionPtr &connection);
     };
 }
