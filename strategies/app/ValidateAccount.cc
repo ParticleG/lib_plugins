@@ -3,9 +3,11 @@
 //
 
 #include <mailio/message.hpp>
+#include <mailio/mime.hpp>
 #include <mailio/smtp.hpp>
 #include <plugins/Configurator.h>
 #include <strategies/actions.h>
+#include <regex>
 #include <strategies/app/ValidateAccount.h>
 #include <utils/crypto.h>
 #include <utils/misc.h>
@@ -65,14 +67,26 @@ drogon::CloseCode ValidateAccount::fromJson(
                 tempData["password"] = password;
                 tempData["expires"] = misc::fromDate(configurator->getEmailExpire());
 
+                u8string subject = u8"[Techmino] 邮箱验证 Email validation";
+
                 message msg;
+                msg.header_codec(message::header_codec_t::BASE64);
                 msg.from(mail_address(configurator->getMailName(), configurator->getMailAddress()));
                 msg.add_recipient(mail_address(username, email));
-                msg.subject("[Techmino] Validate your mailbox!");
-                msg.content("Click the link to validate your account: http://game.techmino.org:10026/tech/api/v1/app/register?"
-                            "id=" + to_string(tempAuth.getValueOfId()) +
-                            "&code=" + crypto::panama::encrypt(websocket::fromJson(tempData), tempAuth.getValueOfAuthToken(), tempAuth.getValueOfAccessToken()));
-
+                msg.subject(string(subject.begin(), subject.end()));
+                msg.content_transfer_encoding(mime::content_transfer_encoding_t::QUOTED_PRINTABLE);
+                msg.content_type(message::media_type_t::TEXT, "html", "utf-8");
+                msg.content(regex_replace(
+                        misc::getFileString(configurator->getHtmlPath()),
+                        regex(R"(\{\{LINK\}\})"),
+                        "http://game.techmino.org:10026/tech/api/v1/app/register?"
+                        "id=" + to_string(tempAuth.getValueOfId()) +
+                        "&code=" + crypto::panama::encrypt(
+                                websocket::fromJson(tempData),
+                                tempAuth.getValueOfAuthToken(),
+                                tempAuth.getValueOfAccessToken()
+                        )
+                ));
                 smtps conn(configurator->getHostName(), configurator->getPort());
                 conn.authenticate(configurator->getUsername(), configurator->getPassword(), smtps::auth_method_t::START_TLS);
                 conn.submit(msg);
