@@ -23,12 +23,14 @@ void Configurator::initAndStart(const Json::Value &config) {
         abort();
     }
     if (config.isMember("smtp") && config["smtp"].isObject() &&
+        config["smtp"].isMember("htmlPath") && config["smtp"]["htmlPath"].isString() &&
         config["smtp"].isMember("username") && config["smtp"]["username"].isString() &&
         config["smtp"].isMember("password") && config["smtp"]["password"].isString() &&
         config["smtp"].isMember("mailAddress") && config["smtp"]["mailAddress"].isString() &&
         config["smtp"].isMember("mailName") && config["smtp"]["mailName"].isString() &&
         config["smtp"].isMember("port") && config["smtp"]["port"].isUInt() &&
         config["smtp"].isMember("hostName") && config["smtp"]["hostName"].isString()) {
+        _htmlPath = config["smtp"]["htmlPath"].asString();
         _username = config["smtp"]["username"].asString();
         _password = config["smtp"]["password"].asString();
         _mailAddress = config["smtp"]["mailAddress"].asString();
@@ -49,6 +51,8 @@ uint64_t Configurator::getAuthExpire() const { return _authTokenExpireTime; }
 uint64_t Configurator::getAccessExpire() const { return _accessTokenExpireTime; }
 
 uint64_t Configurator::getEmailExpire() const { return _emailExpireTime; }
+
+std::string Configurator::getHtmlPath() const { return _htmlPath; }
 
 std::string Configurator::getUsername() const { return _username; }
 

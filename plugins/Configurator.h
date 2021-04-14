@@ -21,6 +21,8 @@ namespace tech::plugins {
 
         [[nodiscard]] uint64_t getEmailExpire() const;
 
+        [[nodiscard]] std::string getHtmlPath() const;
+
         [[nodiscard]] std::string getUsername() const;
 
         [[nodiscard]] std::string getPassword() const;
@@ -36,7 +38,7 @@ namespace tech::plugins {
     private:
         uint32_t _port{};
         uint64_t _authTokenExpireTime{}, _accessTokenExpireTime{}, _emailExpireTime{};
-        std::string _username{}, _password{}, _mailAddress{}, _mailName{}, _hostname{};
+        std::string _htmlPath{}, _username{}, _password{}, _mailAddress{}, _mailName{}, _hostname{};
     };
 }
 
