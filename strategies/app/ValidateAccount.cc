@@ -3,7 +3,6 @@
 //
 
 #include <mailio/message.hpp>
-#include <mailio/mime.hpp>
 #include <mailio/smtp.hpp>
 #include <plugins/Configurator.h>
 #include <strategies/actions.h>
@@ -67,7 +66,7 @@ drogon::CloseCode ValidateAccount::fromJson(
                 tempData["password"] = password;
                 tempData["expires"] = misc::fromDate(configurator->getEmailExpire());
 
-                u8string subject = u8"[Techmino] 邮箱验证 Email validation";
+                u8string subject = u8"[Techmino] Email validation";
 
                 message msg;
                 msg.header_codec(message::header_codec_t::BASE64);
