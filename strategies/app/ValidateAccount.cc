@@ -78,7 +78,7 @@ drogon::CloseCode ValidateAccount::fromJson(
                 msg.content(regex_replace(
                         misc::getFileString(configurator->getHtmlPath()),
                         regex(R"(\{\{LINK\}\})"),
-                        "http://game.techmino.org:10026/tech/api/v1/app/register?"
+                        "http://game.techmino.org:10026/#/register?"
                         "id=" + to_string(tempAuth.getValueOfId()) +
                         "&code=" + crypto::panama::encrypt(
                                 websocket::fromJson(tempData),
