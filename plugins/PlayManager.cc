@@ -6,7 +6,6 @@
 #include <plugins/StreamManager.h>
 #include <strategies/actions.h>
 #include <utils/crypto.h>
-#include <utils/misc.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
@@ -246,6 +245,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                 }
                 misc::logger(typeid(*this).name(), "Try set room start: " + rid);
                 sharedRoom.room.setStart(true);
+
                 auto streamManager = app().getPlugin<StreamManager>();
                 auto srid = crypto::blake2b(drogon::utils::getUuid());
                 try {
