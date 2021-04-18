@@ -23,11 +23,13 @@ drogon::CloseCode GetUserInfo::fromJson(
 ) {
     int64_t id = wsConnPtr->getContext<User>()->getInfo().getValueOfId();
     std::string hash;
+    bool hasHash = false;
     if (request.isMember("data") && request["data"].isObject()) {
         if (request["data"].isMember("uid") && request["data"]["uid"].isInt()) {
             id = request["data"]["uid"].asInt64();
         }
         if (request["data"].isMember("hash") && request["data"]["hash"].isString()) {
+            hasHash = true;
             hash = request["data"]["hash"].asString();
         }
     }
@@ -38,10 +40,11 @@ drogon::CloseCode GetUserInfo::fromJson(
         response["data"]["uid"] = info.getValueOfId();
         response["data"]["username"] = info.getValueOfUsername();
         response["data"]["motto"] = info.getValueOfMotto();
-
-        if (!hash.empty() && hash != crypto::blake2b(info.getValueOfAvatar())) {
-            response["data"]["avatar"] = crypto::blake2b(info.getValueOfAvatar());
+        if (hasHash && hash != info.getValueOfAvatarHash()) {
+            response["data"]["hash"] = info.getValueOfAvatarHash();
+            response["data"]["avatar"] = info.getValueOfAvatar();
         }
+
     } catch (const UnexpectedRows &e) {
         LOG_WARN << e.what();
         response["type"] = "Warn";
