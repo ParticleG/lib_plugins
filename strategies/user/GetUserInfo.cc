@@ -21,7 +21,15 @@ drogon::CloseCode GetUserInfo::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    int64_t id = wsConnPtr->getContext<User>()->getInfo().getValueOfId();
+    int64_t id;
+    auto user = wsConnPtr->getContext<User>();  //TODO: Check why context turns out to be empty
+    if (user) {
+        id = user->getInfo().getValueOfId();
+    } else {
+        LOG_ERROR << "Empty context: " << wsConnPtr.use_count();
+        return CloseCode::kAbnormally;
+    }
+
     std::string hash;
     bool hasHash = false;
     if (request.isMember("data") && request["data"].isObject()) {
