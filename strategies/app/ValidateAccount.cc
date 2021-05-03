@@ -45,6 +45,12 @@ drogon::CloseCode ValidateAccount::fromJson(
                 response["type"] = "Warn";
                 response["reason"] = "Email already registered";
             } else {
+                Json::Value tempResponse;
+                tempResponse["action"] = static_cast<int>(actions::App::validateAccount);
+                tempResponse["type"] = "Self";
+                tempResponse["data"]["message"] = "Successfully created account. Try sending email, please be patient...";
+                wsConnPtr->send(websocket::fromJson(tempResponse));
+
                 app().getDbClient()->execSqlSync(
                         "insert into auth (email, password, validated) "
                         "values ($1, crypt($2, gen_salt('bf', 10)), $3)",
@@ -78,7 +84,7 @@ drogon::CloseCode ValidateAccount::fromJson(
                 msg.content(regex_replace(
                         misc::getFileString(configurator->getHtmlPath()),
                         regex(R"(\{\{LINK\}\})"),
-                        "http://game.techmino.org:10026/#/register?"
+                        "http://home.techmino.org/#/user/register?"
                         "id=" + to_string(tempAuth.getValueOfId()) +
                         "&code=" + crypto::panama::encrypt(
                                 websocket::fromJson(tempData),
@@ -91,8 +97,8 @@ drogon::CloseCode ValidateAccount::fromJson(
                 conn.submit(msg);
 
                 response["action"] = static_cast<int>(actions::App::validateAccount);
-                response["type"] = "Self";
-                response["data"]["message"] = "Successfully created account. Please check mailbox in 15 minutes";
+                response["type"] = "Server";
+                response["data"]["message"] = "Successfully sent email. Please check mailbox in 15 minutes";
             }
         } catch (const orm::DrogonDbException &e) {
             LOG_ERROR << "error:" << e.base().what();
