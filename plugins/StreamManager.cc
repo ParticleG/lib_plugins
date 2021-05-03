@@ -45,7 +45,6 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
-            _checkFinished(rid);    // TODO: Ensure this is working properly.
 
             Json::Value message;
             message["type"] = "Broadcast";
@@ -53,6 +52,7 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
             message["data"] = playerInfo;
             sharedRoom.room.publish(move(message));
         }
+        _checkFinished(rid);    // TODO: Ensure this is working properly.
     }
     if (connection->connected()) {
         Json::Value response;
@@ -154,13 +154,16 @@ void StreamManager::_checkFinished(const string &rid) {
                         response["action"] = static_cast<int>(actions::Stream::endStreaming);
                         sharedRoom.room.publish(move(response));
 
-                        auto playManager = app().getPlugin<PlayManager>();
-                        result["start"] = false;
-                        result["result"] = sharedRoom.room.getDeaths();
-                        playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame), move(result));
-                        {
+                        try {
+                            auto playManager = app().getPlugin<PlayManager>();
+                            result["start"] = false;
+                            result["result"] = sharedRoom.room.getDeaths();
+                            playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame),
+                                                 move(result));
                             auto sharedPlayRoom = playManager->getSharedRoom(sharedRoom.room.getPlayRid());
                             sharedPlayRoom.room.setStart(false);
+                        } catch (const exception &error) {
+                            LOG_WARN << error.what();
                         }
                     }
                     this_thread::sleep_for(chrono::seconds(3));
