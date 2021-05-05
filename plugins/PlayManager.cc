@@ -220,6 +220,9 @@ shared_ptr<Play> PlayManager::_getPlay(const drogon::WebSocketConnectionPtr &con
 void PlayManager::_checkReady(const std::string &rid) {
     {
         auto sharedRoom = getSharedRoom(rid);
+        if (sharedRoom.room.getStart()) {
+            return;
+        }
         if (sharedRoom.room.getPendingStart()) {
             return;
         }
@@ -235,16 +238,20 @@ void PlayManager::_checkReady(const std::string &rid) {
         thread([this, rid]() {
             try {
                 misc::logger(typeid(*this).name(), "Try Check room ready within 2 seconds: " + rid);
-                auto sharedRoom = getSharedRoom(rid);
-                for (unsigned int milliseconds = 0; milliseconds < 200; ++milliseconds) {
-                    this_thread::sleep_for(chrono::milliseconds(10));
-                    if (!sharedRoom.room.checkReady()) {
-                        sharedRoom.room.setPendingStart(false);
-                        return;
+                {
+                    auto sharedRoom = getSharedRoom(rid);
+                    for (unsigned int milliseconds = 0; milliseconds < 200; ++milliseconds) {
+                        this_thread::sleep_for(chrono::milliseconds(10));
+                        if (!sharedRoom.room.checkReady()) {
+                            sharedRoom.room.setPendingStart(false);
+                            return;
+                        }
                     }
                 }
+                // TODO: Check if Unique lock works.
+                auto uniqueRoom = getUniqueRoom(rid);
                 misc::logger(typeid(*this).name(), "Try set room start: " + rid);
-                sharedRoom.room.setStart(true);
+                uniqueRoom.room.setStart(true);
 
                 auto streamManager = app().getPlugin<StreamManager>();
                 auto srid = crypto::blake2b(drogon::utils::getUuid());
@@ -252,8 +259,8 @@ void PlayManager::_checkReady(const std::string &rid) {
                     auto streamRoom = StreamRoom(
                             rid,
                             srid,
-                            sharedRoom.room.getCount(),
-                            sharedRoom.room.getCapacity()
+                            uniqueRoom.room.getCount(),
+                            uniqueRoom.room.getCapacity()
                     );
                     misc::logger(typeid(*this).name(), "Try create stream room: " + srid);
                     streamManager->createRoom(move(streamRoom));
@@ -265,10 +272,10 @@ void PlayManager::_checkReady(const std::string &rid) {
                 response["type"] = "Server";
                 response["action"] = static_cast<int>(actions::Play::startGame);
                 response["data"]["rid"] = srid;
-                sharedRoom.room.publish(static_cast<int>(actions::Play::startGame), move(response));
-                sharedRoom.room.setPendingStart(false);
+                uniqueRoom.room.publish(static_cast<int>(actions::Play::startGame), move(response));
+                uniqueRoom.room.setPendingStart(false);
                 misc::logger(typeid(*this).name(), "Try reset room ready: " + rid);
-                sharedRoom.room.resetReady();
+                uniqueRoom.room.resetReady();
             } catch (const exception &error) {
                 LOG_FATAL << error.what();
                 abort();
