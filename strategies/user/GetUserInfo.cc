@@ -52,7 +52,6 @@ drogon::CloseCode GetUserInfo::fromJson(
             response["data"]["hash"] = info.getValueOfAvatarHash();
             response["data"]["avatar"] = info.getValueOfAvatar();
         }
-
     } catch (const UnexpectedRows &e) {
         LOG_WARN << e.what();
         response["type"] = "Warn";
