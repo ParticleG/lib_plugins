@@ -20,7 +20,10 @@ using namespace tech::strategies;
 using namespace tech::utils;
 using namespace std;
 
-ValidateAccount::ValidateAccount() : _authMapper(app().getDbClient()), _infoMapper(app().getDbClient()) {}
+ValidateAccount::ValidateAccount() :
+        _authMapper(app().getDbClient()),
+        _dataMapper(app().getDbClient()),
+        _infoMapper(app().getDbClient()) {}
 
 drogon::CloseCode ValidateAccount::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
@@ -66,11 +69,15 @@ drogon::CloseCode ValidateAccount::fromJson(
                 tempInfo.setEmail(email);
                 tempInfo.setUsername(username);
                 _infoMapper.insert(tempInfo);
+                Techmino::Data tempData;
+                tempData.setId(tempAuth.getValueOfId());
+                tempData.setEmail(tempAuth.getValueOfEmail());
+                _dataMapper.insert(tempData);
 
-                Json::Value tempData;
-                tempData["email"] = email;
-                tempData["password"] = password;
-                tempData["expires"] = misc::fromDate(configurator->getEmailExpire());
+                Json::Value tempJson;
+                tempJson["email"] = email;
+                tempJson["password"] = password;
+                tempJson["expires"] = misc::fromDate(configurator->getEmailExpire());
 
                 u8string subject = u8"[Techmino] Email validation";
 
@@ -87,7 +94,7 @@ drogon::CloseCode ValidateAccount::fromJson(
                         "http://home.techmino.org/#/user/register?"
                         "id=" + to_string(tempAuth.getValueOfId()) +
                         "&code=" + crypto::panama::encrypt(
-                                websocket::fromJson(tempData),
+                                websocket::fromJson(tempJson),
                                 tempAuth.getValueOfAuthToken(),
                                 tempAuth.getValueOfAccessToken()
                         )

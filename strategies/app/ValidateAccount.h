@@ -5,6 +5,7 @@
 #pragma once
 
 #include <models/Auth.h>
+#include <models/Data.h>
 #include <models/Info.h>
 #include <strategies/base/MessageHandler.h>
 
@@ -21,6 +22,7 @@ namespace tech::strategies {
 
     private:
         drogon::orm::Mapper<drogon_model::Techmino::Auth> _authMapper;
+        drogon::orm::Mapper<drogon_model::Techmino::Data> _dataMapper;
         drogon::orm::Mapper<drogon_model::Techmino::Info> _infoMapper;
     };
 }
