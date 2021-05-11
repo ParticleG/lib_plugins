@@ -10,19 +10,20 @@ namespace tech::strategies::actions {
         chat = 200,
         play = 300,
         stream = 400,
-        user = 500
+        user = 500,
     };
 
     enum class App {
         getAppVersion = 0,
         getNotice = 1,
-        validateAccount = 2
+        validateAccount = 2,
+        getUserCount = 3,
     };
     enum class Chat {
         getChannelList = 0,
         enterChannel = 1,
         leaveChannel = 2,
-        publishChatMessage = 3
+        publishChatMessage = 3,
     };
     enum class Play {
         getRoomList = 0,
@@ -34,7 +35,7 @@ namespace tech::strategies::actions {
         changeReady = 6,
         pendingStart = 7,
         startGame = 8,
-        endGame = 9
+        endGame = 9,
     };
     enum class Stream {
         startStreaming = 0,
@@ -42,7 +43,7 @@ namespace tech::strategies::actions {
         enterRoom = 2,
         leaveRoom = 3,
         publishDeathData = 4,
-        publishStreamData = 5
+        publishStreamData = 5,
     };
     enum class User {
         getAccessToken = 0,

@@ -10,7 +10,7 @@ using namespace drogon_model;
 using namespace drogon;
 using namespace std;
 
-tech::strategies::GetNotice::GetNotice() : _messageMapper(app().getDbClient()) {}
+GetNotice::GetNotice() : _messageMapper(app().getDbClient()) {}
 
 drogon::CloseCode GetNotice::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,

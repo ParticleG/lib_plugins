@@ -6,6 +6,7 @@
 #include <strategies/app/GetAppVersion.h>
 #include <strategies/app/GetNotice.h>
 #include <strategies/app/ValidateAccount.h>
+#include <strategies/app/GetUserCount.h>
 #include <strategies/user/GetAccessToken.h>
 #include <strategies/user/GetUserInfo.h>
 #include <strategies/chat/GetChannelList.h>
@@ -35,6 +36,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     _handlerFactory.registerHandler<GetAppVersion>(actions::Prefix::app + actions::App::getAppVersion);
     _handlerFactory.registerHandler<GetNotice>(actions::Prefix::app + actions::App::getNotice);
     _handlerFactory.registerHandler<ValidateAccount>(actions::Prefix::app + actions::App::validateAccount);
+    _handlerFactory.registerHandler<GetUserCount>(actions::Prefix::app + actions::App::getUserCount);
 
     _handlerFactory.registerHandler<GetAccessToken>(actions::Prefix::user + actions::User::getAccessToken);
     _handlerFactory.registerHandler<GetUserInfo>(actions::Prefix::user + actions::User::getUserInfo);
