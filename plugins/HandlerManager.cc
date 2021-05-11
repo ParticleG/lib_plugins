@@ -9,6 +9,8 @@
 #include <strategies/app/GetUserCount.h>
 #include <strategies/user/GetAccessToken.h>
 #include <strategies/user/GetUserInfo.h>
+#include <strategies/user/UploadData.h>
+#include <strategies/user/DownloadData.h>
 #include <strategies/chat/GetChannelList.h>
 #include <strategies/chat/EnterChannel.h>
 #include <strategies/chat/LeaveChannel.h>
@@ -40,6 +42,8 @@ void HandlerManager::initAndStart(const Json::Value &config) {
 
     _handlerFactory.registerHandler<GetAccessToken>(actions::Prefix::user + actions::User::getAccessToken);
     _handlerFactory.registerHandler<GetUserInfo>(actions::Prefix::user + actions::User::getUserInfo);
+    _handlerFactory.registerHandler<UploadData>(actions::Prefix::user + actions::User::uploadData);
+    _handlerFactory.registerHandler<DownloadData>(actions::Prefix::user + actions::User::downloadData);
 
     _handlerFactory.registerHandler<GetChannelList>(actions::Prefix::chat + actions::Chat::getChannelList);
     _handlerFactory.registerHandler<EnterChannel>(actions::Prefix::chat + actions::Chat::enterChannel);

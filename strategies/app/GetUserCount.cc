@@ -16,7 +16,7 @@ drogon::CloseCode GetUserCount::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    response["action"] = static_cast<int>(actions::App::getNotice);
+    response["action"] = static_cast<int>(actions::App::getUserCount);
     response["type"] = "Self";
     response["data"] = app().getPlugin<UserManager>()->getCount();
     return CloseCode::kNormalClosure;

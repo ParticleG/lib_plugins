@@ -48,6 +48,8 @@ namespace tech::strategies::actions {
     enum class User {
         getAccessToken = 0,
         getUserInfo = 1,
+        uploadData = 2,
+        downloadData = 3,
     };
 
     static int operator+(Prefix prefix, int action) {
