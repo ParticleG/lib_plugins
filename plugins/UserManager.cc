@@ -19,18 +19,22 @@ void UserManager::shutdown() {
     LOG_INFO << "UserManager shutdown.";
 }
 
-void UserManager::subscribe(WebSocketConnectionPtr connection, MapType mapType) {
+void UserManager::subscribe(const int64_t &uid, WebSocketConnectionPtr connection, MapType mapType) {
     misc::logger(typeid(*this).name(), "Try login connection");
-    auto uid = connection->getContext<User>()->getAuth().getValueOfId();
     {
         shared_lock<shared_mutex> lock(_sharedMutex);
-        for (auto &connMap : _connMapMap) {
-            auto iter = connMap.second.find(uid);
-            if (iter != connMap.second.end()) {
-                Json::Value response;
-                response["type"] = "Error";
-                response["reason"] = "Account logged in at another place";
-                websocket::close(iter->second, CloseCode::kViolation, tech::utils::websocket::fromJson(response));
+        if (_connMapMap[mapType].find(uid) != _connMapMap[mapType].end()) {
+            Json::Value response;
+            response["type"] = "Error";
+            response["reason"] = "Account logged in at another place";
+            for (auto &connMap : _connMapMap) {
+                if(connMap.second[uid]){
+                    websocket::close(
+                            connMap.second[uid],
+                            CloseCode::kViolation,
+                            tech::utils::websocket::fromJson(response)
+                    );
+                }
             }
         }
     }
@@ -39,13 +43,14 @@ void UserManager::subscribe(WebSocketConnectionPtr connection, MapType mapType) 
     misc::logger(typeid(*this).name(), "Login: " + to_string(uid));
 }
 
-void UserManager::unsubscribe(const WebSocketConnectionPtr &connection, MapType mapType) {
+void UserManager::unsubscribe(const int64_t &uid, const WebSocketConnectionPtr &connection, MapType mapType) {
     misc::logger(typeid(*this).name(), "Try unsubscribing connection");
-    auto uid = connection->getContext<User>()->getAuth().getValueOfId();
     unique_lock<shared_mutex> lock(_sharedMutex);
-    auto node = _connMapMap[mapType].extract(uid);
-    if (node.empty()) {
-        LOG_INFO << "Already Logout at: " << static_cast<int>(mapType);
+    if(_connMapMap[mapType][uid] == connection){
+        auto node = _connMapMap[mapType].extract(uid);
+        if (node.empty()) {
+            LOG_INFO << "Already Logout at: " << static_cast<int>(mapType);
+        }
     }
 }
 

@@ -25,9 +25,9 @@ namespace tech::plugins {
 
         void shutdown() override;
 
-        void subscribe(drogon::WebSocketConnectionPtr connection, MapType mapType);
+        void subscribe(const int64_t &uid, drogon::WebSocketConnectionPtr connection, MapType mapType);
 
-        void unsubscribe(const drogon::WebSocketConnectionPtr &connection, MapType mapType);
+        void unsubscribe(const int64_t &uid, const drogon::WebSocketConnectionPtr &connection, MapType mapType);
 
         Json::Value getCount();
 
