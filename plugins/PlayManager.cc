@@ -15,37 +15,11 @@ using namespace drogon;
 using namespace std;
 
 void PlayManager::initAndStart(const Json::Value &config) {
-    if (config.isMember("typeList") && config["typeList"].isArray()) {
-        for (auto &type : config["typeList"]) {
-            if (
-                    type.isMember("type") && type["type"].isString() &&
-                    type.isMember("capacity") && type["capacity"].isUInt64()
-                    ) {
-                _typesMap[type["type"].asString()] = type["capacity"].asUInt64();
-            } else {
-                LOG_ERROR << R"(Requires string value "type" and UInt64 value "capacity" in config['typeList'])";
-                abort();
-            }
-        }
-    } else {
-        LOG_ERROR << R"(Requires array value "channels" in plugin ChatManager's config')";
-        abort();
-    }
     LOG_INFO << "PlayManager loaded.";
 }
 
 void PlayManager::shutdown() {
     LOG_INFO << "PlayManager shutdown.";
-}
-
-uint64_t PlayManager::getCapacity(const string &type) const {
-    misc::logger(typeid(*this).name(), "Try get room capacity: " + type);
-    shared_lock<shared_mutex> lock(_sharedMutex);
-    auto iter = _typesMap.find(type);
-    if (iter != _typesMap.end()) {
-        return iter->second;
-    }
-    throw out_of_range("Type not found");
 }
 
 void PlayManager::subscribe(
@@ -78,6 +52,7 @@ void PlayManager::subscribe(
     response["action"] = static_cast<int>(actions::Play::enterRoom);
     response["data"]["sid"] = play->getSid();
     response["data"]["ready"] = play->getReady();
+    response["data"]["roomData"] = sharedRoom.room.getData();
     response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
     response["data"]["players"] = sharedRoom.room.getPlayers();
     connection->send(websocket::fromJson(response));
@@ -203,7 +178,7 @@ Json::Value PlayManager::parseInfo(
             if (counter >= begin + count) {
                 break;
             }
-            if (type.empty() || type == room_with_mutex.room.getType()) {
+            if (type.empty() || type == room_with_mutex.room.getData()) {
                 info.append(room_with_mutex.room.parseInfo());
             }
             ++counter;

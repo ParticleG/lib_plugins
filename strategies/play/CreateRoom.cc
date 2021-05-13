@@ -23,21 +23,19 @@ CloseCode CreateRoom::fromJson(
 ) {
     if (!(
             request.isMember("data") && request["data"].isObject() &&
-            request["data"].isMember("config") && request["data"]["config"].isString()
+            request["data"].isMember("capacity") && request["data"]["capacity"].isUInt64() &&
+            request["data"].isMember("config") && request["data"]["config"].isString() &&
+            request["data"].isMember("roomData") && request["data"]["roomData"].isObject()
     )) {
         response["type"] = "Warn";
-        response["reason"] = "Wrong format: Requires string type 'rid' and 'config' in 'data'";
+        response["reason"] = "Wrong format: Requires UInt64 type 'capacity', string type 'rid', 'config' and object type 'roomData' in 'data'";
     } else {
-        string type = "classic", name, password, config;
-
-        if (request["data"].isMember("type") && request["data"]["type"].isString()) {
-            type = request["data"]["type"].asString();
-        }
+        string name, password, config;
 
         if (request["data"].isMember("name") && request["data"]["name"].isString()) {
             name = request["data"]["name"].asString();
         } else {
-            name = type + " room";
+            name = "A " + to_string(request["data"]["capacity"].asUInt64()) + " room";
         }
 
         if (request["data"].isMember("password") && request["data"]["password"].isString()) {
@@ -48,14 +46,13 @@ CloseCode CreateRoom::fromJson(
 
         try {
             auto playManager = app().getPlugin<PlayManager>();
-            auto capacity = playManager->getCapacity(type);
             auto rid = crypto::blake2b(drogon::utils::getUuid());
             auto room = PlayRoom(
                     rid,
-                    type,
                     name,
                     password,
-                    capacity
+                    request["data"]["capacity"].asUInt64(),
+                    request["data"]["roomData"]
             );
             playManager->createRoom(move(room));
             playManager->subscribe(rid, password, wsConnPtr);
