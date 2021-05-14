@@ -11,6 +11,7 @@ namespace tech::strategies::actions {
         play = 300,
         stream = 400,
         user = 500,
+        manage = 600,
     };
 
     enum class App {
@@ -51,6 +52,10 @@ namespace tech::strategies::actions {
         uploadData = 2,
         downloadData = 3,
     };
+    enum class Manage {
+        getGenericInfo = 0,
+        getPlayManagerStatus = 1,
+    };
 
     static int operator+(Prefix prefix, int action) {
         return static_cast<int>(prefix) + action;
@@ -73,6 +78,10 @@ namespace tech::strategies::actions {
     }
 
     static int operator+(Prefix prefix, User action) {
+        return static_cast<int>(prefix) + static_cast<int>(action);
+    }
+
+    static int operator+(Prefix prefix, Manage action) {
         return static_cast<int>(prefix) + static_cast<int>(action);
     }
 }

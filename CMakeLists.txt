@@ -31,6 +31,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/chat CHAT_SRC)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/play PLAY_SRC)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/stream STREAM_SRC)
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/user USER_SRC)
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/manage MANAGE_SRC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC STRUCTURES_LIB ${MAILIO_LIB})
 
@@ -45,4 +46,5 @@ target_sources(${PROJECT_NAME} PUBLIC
         ${CHAT_SRC}
         ${PLAY_SRC}
         ${STREAM_SRC}
-        ${USER_SRC})
+        ${USER_SRC}
+        ${MANAGE_SRC})
