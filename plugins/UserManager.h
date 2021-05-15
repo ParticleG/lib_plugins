@@ -12,13 +12,12 @@
 namespace tech::plugins {
     class UserManager : public drogon::Plugin<UserManager> {
     public:
-        typedef std::unordered_map<int64_t, drogon::WebSocketConnectionPtr> connMap;
-
         enum class MapType {
             chat,
             play,
             stream,
-            user
+            user,
+            all
         };
 
         void initAndStart(const Json::Value &config) override;
@@ -27,12 +26,14 @@ namespace tech::plugins {
 
         void subscribe(const int64_t &uid, drogon::WebSocketConnectionPtr connection, MapType mapType);
 
-        void unsubscribe(const int64_t &uid, const drogon::WebSocketConnectionPtr &connection, MapType mapType);
+        std::vector<drogon::WebSocketConnectionPtr> unsubscribe(const int64_t &uid, MapType mapType);
+
+        Json::Value parseInfo();
 
         Json::Value getCount();
 
     private:
-        std::unordered_map<MapType,connMap>_connMapMap;
+        std::unordered_map<int64_t, drogon::WebSocketConnectionPtr> _chatConnMap{}, _playConnMap{}, _streamConnMap{}, _userConnMap{};
         mutable std::shared_mutex _sharedMutex;
     };
 }
