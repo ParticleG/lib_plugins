@@ -21,22 +21,18 @@ CloseCode CreateRoom::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
+    LOG_INFO << websocket::fromJson(request);
     if (!(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("capacity") && request["data"]["capacity"].isUInt64() &&
             request["data"].isMember("config") && request["data"]["config"].isString() &&
+            request["data"].isMember("roomInfo") && request["data"]["roomInfo"].isObject()&&
             request["data"].isMember("roomData") && request["data"]["roomData"].isObject()
     )) {
         response["type"] = "Warn";
-        response["reason"] = "Wrong format: Requires UInt64 type 'capacity', string type 'rid', 'config' and object type 'roomData' in 'data'";
+        response["reason"] = "Wrong format: Requires UInt64 type 'capacity', string type 'config' and object type 'roomInfo', 'roomData' in 'data'";
     } else {
-        string name, password, config;
-
-        if (request["data"].isMember("name") && request["data"]["name"].isString()) {
-            name = request["data"]["name"].asString();
-        } else {
-            name = "A " + to_string(request["data"]["capacity"].asUInt64()) + " room";
-        }
+        string password, config;
 
         if (request["data"].isMember("password") && request["data"]["password"].isString()) {
             password = request["data"]["password"].asString();
@@ -49,9 +45,9 @@ CloseCode CreateRoom::fromJson(
             auto rid = crypto::blake2b(drogon::utils::getUuid());
             auto room = PlayRoom(
                     rid,
-                    name,
                     password,
                     request["data"]["capacity"].asUInt64(),
+                    request["data"]["roomInfo"],
                     request["data"]["roomData"]
             );
             playManager->createRoom(move(room));
