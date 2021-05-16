@@ -5,7 +5,6 @@
 #include <plugins/Configurator.h>
 #include <strategies/actions.h>
 #include <strategies/stream/PublishStreamData.h>
-#include <utils/misc.h>
 
 using namespace drogon;
 using namespace tech::plugins;
@@ -39,9 +38,9 @@ CloseCode PublishStreamData::fromJson(
         try {
             app().getPlugin<StreamManager>()->publish(
                     get<string>(stream->getRid()),
-                    wsConnPtr,
                     static_cast<int>(actions::Stream::publishStreamData),
                     move(data),
+                    wsConnPtr,
                     stream->getSid());
             return CloseCode::kNone;
         } catch (const exception &error) {

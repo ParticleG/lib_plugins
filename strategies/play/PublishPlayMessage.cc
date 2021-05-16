@@ -31,7 +31,7 @@ CloseCode PublishPlayMessage::fromJson(
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         auto data = request["data"];
         try {
-            app().getPlugin<PlayManager>()->publish(rid, wsConnPtr, static_cast<int>(actions::Play::publishPlayMessage), move(data));
+            app().getPlugin<PlayManager>()->publish(rid, static_cast<int>(actions::Play::publishPlayMessage), move(data), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";

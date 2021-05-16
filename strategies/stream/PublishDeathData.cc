@@ -36,7 +36,7 @@ CloseCode PublishDeathData::fromJson(
         auto rid = get<string>(stream->getRid());
         auto data = request["data"];
         try {
-            app().getPlugin<StreamManager>()->publish(rid, wsConnPtr, static_cast<int>(actions::Stream::publishDeathData), move(data));
+            app().getPlugin<StreamManager>()->publish(rid, static_cast<int>(actions::Stream::publishDeathData), move(data), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";
