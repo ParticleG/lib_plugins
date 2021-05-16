@@ -24,17 +24,10 @@ namespace tech ::plugins {
 
         void publish(
                 const std::string &rid,
-                const drogon::WebSocketConnectionPtr &connection,
-                const uint64_t &action,
-                Json::Value &&data
-        );
-
-        void publish(
-                const std::string &rid,
-                const drogon::WebSocketConnectionPtr &connection,
                 const uint64_t &action,
                 Json::Value &&data,
-                const uint64_t &excluded
+                const drogon::WebSocketConnectionPtr &connection,
+                const uint64_t &excluded = 0
         );
 
         Json::Value parseInfo() const;

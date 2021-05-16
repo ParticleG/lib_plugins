@@ -5,7 +5,6 @@
 #include <plugins/PlayManager.h>
 #include <plugins/StreamManager.h>
 #include <strategies/actions.h>
-#include <utils/misc.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
@@ -65,27 +64,9 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
 
 void StreamManager::publish(
         const string &rid,
-        const WebSocketConnectionPtr &connection,
-        const uint64_t &action,
-        Json::Value &&data
-) {
-    auto sharedRoom = getSharedRoom(rid);
-    if (action == static_cast<int>(actions::Stream::publishDeathData)) {
-        _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
-        _checkFinished(rid);
-    }
-    Json::Value response;
-    response["type"] = "Broadcast";
-    response["action"] = action;
-    response["data"] = _getStream(connection)->parsePlayerInfo(move(data));
-    sharedRoom.room.publish(move(response));
-}
-
-void StreamManager::publish(
-        const string &rid,
-        const WebSocketConnectionPtr &connection,
         const uint64_t &action,
         Json::Value &&data,
+        const WebSocketConnectionPtr &connection,
         const uint64_t &excluded
 ) {
     auto sharedRoom = getSharedRoom(rid);
@@ -103,9 +84,9 @@ void StreamManager::publish(
 Json::Value StreamManager::parseInfo() const {
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
-    for (const auto &[id, room_with_mutex] : _idsMap) {
-        shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
-        info.append(room_with_mutex.room.parseInfo());
+    for (const auto &pair : _idsMap) {
+        shared_lock<shared_mutex> roomLock(*pair.second.sharedMutex);
+        info.append(pair.second.room.parseInfo());
     }
     return info;
 }
