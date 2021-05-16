@@ -52,6 +52,7 @@ void PlayManager::subscribe(
     response["action"] = static_cast<int>(actions::Play::enterRoom);
     response["data"]["sid"] = play->getSid();
     response["data"]["ready"] = play->getReady();
+    response["data"]["roomInfo"] = sharedRoom.room.getInfo();
     response["data"]["roomData"] = sharedRoom.room.getData();
     response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
     response["data"]["players"] = sharedRoom.room.getPlayers();
@@ -87,48 +88,19 @@ void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &c
     }
 }
 
-void PlayManager::publish(const string &rid, const uint64_t &action, Json::Value &&data) {
-    auto sharedRoom = getSharedRoom(rid);
-    if (action == static_cast<int>(actions::Play::publishPlayMessage)) {
-        data["time"] = misc::fromDate();
-    }
-    Json::Value response;
-    response["type"] = "Server";
-    response["action"] = action;
-    response["data"] = move(data);
-    misc::logger(typeid(*this).name(), "Server: " + websocket::fromJson(response));
-    sharedRoom.room.publish(action, move(response));
-}
-
 void PlayManager::publish(
         const string &rid,
-        const WebSocketConnectionPtr &connection,
-        const uint64_t &action,
-        Json::Value &&data
-) {
-    auto sharedRoom = getSharedRoom(rid);
-    data["time"] = misc::fromDate();
-    Json::Value response;
-    response["type"] = "Broadcast";
-    response["action"] = action;
-    response["data"] = _getPlay(connection)->parsePlayerInfo(move(data));
-    misc::logger(typeid(*this).name(), "Broadcast: " + websocket::fromJson(response));
-    sharedRoom.room.publish(action, move(response));
-}
-
-void PlayManager::publish(
-        const string &rid,
-        const WebSocketConnectionPtr &connection,
         const uint64_t &action,
         Json::Value &&data,
+        const WebSocketConnectionPtr &connection,
         const uint64_t &excluded
 ) {
     auto sharedRoom = getSharedRoom(rid);
     Json::Value response;
-    response["type"] = "Broadcast";
+    response["type"] = connection ? "Broadcast" : "Server";
     response["action"] = action;
-    response["data"] = _getPlay(connection)->parsePlayerInfo(move(data)); // TODO: Remove unnecessary items.
-    misc::logger(typeid(*this).name(), "Exclude broadcast: " + websocket::fromJson(response));
+    response["data"] = connection ? _getPlay(connection)->parsePlayerInfo(move(data)) : move(data); // TODO: Remove unnecessary items.
+    misc::logger(typeid(*this).name(), "Publish: " + websocket::fromJson(response));
     sharedRoom.room.publish(action, move(response), excluded);
 }
 
@@ -142,7 +114,7 @@ void PlayManager::changeConfig(
     Json::Value data;
     data["config"] = config;
     play->setConfig(move(config));
-    publish(rid, connection, static_cast<int>(actions::Play::changeConfig), move(data), play->getSid());
+    publish(rid, static_cast<int>(actions::Play::changeConfig), move(data), connection, play->getSid());
 }
 
 void PlayManager::changeReady(
@@ -155,22 +127,21 @@ void PlayManager::changeReady(
     Json::Value data;
     data["ready"] = ready;
     play->setReady(ready);
-    publish(rid, connection, static_cast<int>(actions::Play::changeReady), move(data));
+    publish(rid, static_cast<int>(actions::Play::changeReady), move(data), connection);
     _checkReady(rid);
 }
 
 Json::Value PlayManager::parseInfo(
-        const string &type,
         const unsigned int &begin,
         const unsigned int &count
 ) const {
-    misc::logger(typeid(*this).name(), "Try parsing manager info: (" + type + ") " + to_string(count));
+    misc::logger(typeid(*this).name(), "Try parsing manager info: " + to_string(count));
     shared_lock<shared_mutex> lock(_sharedMutex);
     Json::Value info(Json::arrayValue);
     if (begin < _idsMap.size()) {
         unsigned int counter = 0;
-        for (const auto &[id, room_with_mutex] : _idsMap) {
-            shared_lock<shared_mutex> roomLock(*room_with_mutex.sharedMutex);
+        for (const auto &pair : _idsMap) {
+            shared_lock<shared_mutex> roomLock(*pair.second.sharedMutex);
             if (counter < begin) {
                 ++counter;
                 continue;
@@ -178,9 +149,7 @@ Json::Value PlayManager::parseInfo(
             if (counter >= begin + count) {
                 break;
             }
-            if (type.empty() || type == room_with_mutex.room.getData()) {
-                info.append(room_with_mutex.room.parseInfo());
-            }
+            info.append(pair.second.room.parseInfo());
             ++counter;
         }
     }

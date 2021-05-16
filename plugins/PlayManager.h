@@ -33,22 +33,9 @@ namespace tech::plugins {
         void publish(
                 const std::string &rid,
                 const uint64_t &action,
-                Json::Value &&data
-        );
-
-        void publish(
-                const std::string &rid,
-                const drogon::WebSocketConnectionPtr &connection,
-                const uint64_t &action,
-                Json::Value &&data
-        );
-
-        void publish(
-                const std::string &rid,
-                const drogon::WebSocketConnectionPtr &connection,
-                const uint64_t &action,
                 Json::Value &&data,
-                const uint64_t &excluded
+                const drogon::WebSocketConnectionPtr &connection = nullptr,
+                const uint64_t &excluded = 0
         );
 
         void changeConfig(
@@ -64,7 +51,6 @@ namespace tech::plugins {
         );
 
         Json::Value parseInfo(
-                const std::string &type,
                 const unsigned int &begin,
                 const unsigned int &count
         ) const;
