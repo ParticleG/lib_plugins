@@ -22,12 +22,8 @@ CloseCode GetRoomList::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    string type;
     unsigned int begin = 0, count = 10;
     if (request.isMember("data") && request["data"].isObject()) {
-        if (request["data"].isMember("type") && request["data"]["type"].isString()) {
-            type = request["data"]["type"].asString();
-        }
         if (request["data"].isMember("begin") && request["data"]["begin"].isUInt()) {
             begin = request["data"]["begin"].asUInt();
         }
@@ -38,6 +34,6 @@ CloseCode GetRoomList::fromJson(
     LOG_INFO << websocket::fromJson(app().getPlugin<StreamManager>()->parseInfo());
     response["type"] = "Self";
     response["action"] = static_cast<int>(actions::Play::getRoomList);
-    response["roomList"] = app().getPlugin<PlayManager>()->parseInfo(type, begin, count);
+    response["roomList"] = app().getPlugin<PlayManager>()->parseInfo(begin, count);
     return CloseCode::kNormalClosure;
 }
