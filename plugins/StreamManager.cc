@@ -28,9 +28,11 @@ void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connecti
         stream->setWatch(true);
     }
     Json::Value broadcast, self;
-    self["type"] = "self";
+    self["type"] = "Self";
     self["action"] = static_cast<int>(actions::Stream::enterRoom);
     self["data"] = stream->parsePlayerInfo(sharedRoom.room.getStart() ? sharedRoom.room.parseHistories() : Json::Value());
+    self["data"]["connected"] = sharedRoom.room.getPlayers();
+    connection->send(websocket::fromJson(self));
 
     sharedRoom.room.subscribe(move(connection));
     broadcast["type"] = "Broadcast";
