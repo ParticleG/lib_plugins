@@ -50,9 +50,9 @@ void PlayManager::subscribe(
 
     response["type"] = "Self";
     response["action"] = static_cast<int>(actions::Play::enterRoom);
+    response["data"] = sharedRoom.room.parseInfo();
     response["data"]["sid"] = play->getSid();
     response["data"]["ready"] = play->getReady();
-    response["data"]["roomInfo"] = sharedRoom.room.getInfo();
     response["data"]["roomData"] = sharedRoom.room.getData();
     response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
     response["data"]["players"] = sharedRoom.room.getPlayers();
