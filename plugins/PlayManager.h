@@ -17,8 +17,6 @@ namespace tech::plugins {
 
         void shutdown() override;
 
-        void subscribe(const std::string &rid, drogon::WebSocketConnectionPtr connection) override {}
-
         void subscribe(
                 const std::string &rid,
                 const std::string &password,
@@ -28,7 +26,7 @@ namespace tech::plugins {
         void unsubscribe(
                 const std::string &rid,
                 const drogon::WebSocketConnectionPtr &connection
-        ) override;
+        );
 
         void publish(
                 const std::string &rid,
