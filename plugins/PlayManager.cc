@@ -56,6 +56,9 @@ void PlayManager::subscribe(
     response["data"]["roomData"] = sharedRoom.room.getData();
     response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
     response["data"]["players"] = sharedRoom.room.getPlayers();
+    if (!sharedRoom.room.getRelatedStreamRid().empty()) {
+        response["data"]["srid"] = sharedRoom.room.getRelatedStreamRid();
+    }
     connection->send(websocket::fromJson(response));
 }
 
@@ -208,6 +211,8 @@ void PlayManager::_checkReady(const std::string &rid) {
                     );
                     misc::logger(typeid(*this).name(), "Try create stream room: " + srid);
                     streamManager->createRoom(move(streamRoom));
+                    streamManager->startCountDown(srid);
+                    uniqueRoom.room.setRelatedStreamRid(srid);
                 } catch (const exception &error) {
                     LOG_FATAL << error.what();
                     abort();

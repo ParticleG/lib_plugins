@@ -34,7 +34,13 @@ CloseCode PublishStreamData::fromJson(
             response["reason"] = "Get 'Stream' failed (nullptr)";
             return CloseCode::kUnexpectedCondition;
         }
+        if (stream->getWatch()) {
+            response["type"] = "Warn";
+            response["reason"] = "You are in watch mode";
+            return CloseCode::kNormalClosure;
+        }
         auto data = request["data"];
+        stream->addHistory(request["data"]["stream"].asString());
         try {
             app().getPlugin<StreamManager>()->publish(
                     get<string>(stream->getRid()),
