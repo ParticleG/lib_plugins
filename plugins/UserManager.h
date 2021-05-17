@@ -24,6 +24,8 @@ namespace tech::plugins {
 
         void shutdown() override;
 
+        void disconnect(const int64_t &uid, MapType mapType, const Json::Value& message);
+
         void subscribe(const int64_t &uid, drogon::WebSocketConnectionPtr connection, MapType mapType);
 
         std::vector<drogon::WebSocketConnectionPtr> unsubscribe(const int64_t &uid, MapType mapType);

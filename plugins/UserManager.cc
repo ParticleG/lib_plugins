@@ -20,6 +20,19 @@ void UserManager::shutdown() {
     LOG_INFO << "UserManager shutdown.";
 }
 
+void UserManager::disconnect(const int64_t &uid, UserManager::MapType mapType, const Json::Value &message) {
+    auto oldConnections = unsubscribe(uid, mapType);
+    for (const auto &oldConnection : oldConnections) {
+        if (oldConnection) {
+            websocket::close(
+                    oldConnection,
+                    CloseCode::kViolation,
+                    tech::utils::websocket::fromJson(message)
+            );
+        }
+    }
+}
+
 void UserManager::subscribe(const int64_t &uid, WebSocketConnectionPtr connection, MapType mapType) {
     misc::logger(typeid(*this).name(), "Try login connection");
     bool hasConflict = false;
@@ -51,19 +64,10 @@ void UserManager::subscribe(const int64_t &uid, WebSocketConnectionPtr connectio
         }
     }
     if (hasConflict) {
-        auto oldConnections = unsubscribe(uid, MapType::all);
         Json::Value response;
         response["type"] = "Error";
         response["reason"] = "Account logged in at another place";
-        for (const auto &oldConnection : oldConnections) {
-            if (oldConnection) {
-                websocket::close(
-                        oldConnection,
-                        CloseCode::kViolation,
-                        tech::utils::websocket::fromJson(response)
-                );
-            }
-        }
+        disconnect(uid, MapType::all, response);
     }
     {
         unique_lock<shared_mutex> lock(_sharedMutex);
