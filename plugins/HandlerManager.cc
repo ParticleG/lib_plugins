@@ -26,6 +26,7 @@
 #include <strategies/stream/PublishDeathData.h>
 #include <strategies/manage/GetGenericInfo.h>
 #include <strategies/manage/GetPlayManagerStatus.h>
+#include <strategies/manage/GetStreamManagerStatus.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
@@ -65,6 +66,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
 
     _handlerFactory.registerHandler<GetGenericInfo>(actions::Prefix::manage + actions::Manage::getGenericInfo);
     _handlerFactory.registerHandler<GetPlayManagerStatus>(actions::Prefix::manage + actions::Manage::getPlayManagerStatus);
+    _handlerFactory.registerHandler<GetStreamManagerStatus>(actions::Prefix::manage + actions::Manage::getStreamManagerStatus);
     LOG_INFO << "HandlerManager loaded.";
 }
 

@@ -55,6 +55,7 @@ namespace tech::strategies::actions {
     enum class Manage {
         getGenericInfo = 0,
         getPlayManagerStatus = 1,
+        getStreamManagerStatus = 2,
     };
 
     static int operator+(Prefix prefix, int action) {
