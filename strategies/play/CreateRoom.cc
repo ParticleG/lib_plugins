@@ -21,7 +21,6 @@ CloseCode CreateRoom::fromJson(
         const Json::Value &request,
         Json::Value &response
 ) {
-    LOG_INFO << websocket::fromJson(request);
     if (!(
             request.isMember("data") && request["data"].isObject() &&
             request["data"].isMember("capacity") && request["data"]["capacity"].isUInt64() &&
