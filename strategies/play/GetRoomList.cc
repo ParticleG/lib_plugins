@@ -3,7 +3,6 @@
 //
 
 #include <plugins/Configurator.h>
-#include <plugins/StreamManager.h>
 #include <strategies/actions.h>
 #include <strategies/play/GetRoomList.h>
 
@@ -31,7 +30,6 @@ CloseCode GetRoomList::fromJson(
             count = request["data"]["count"].asUInt();
         }
     }
-    LOG_INFO << websocket::fromJson(app().getPlugin<StreamManager>()->parseInfo());
     response["type"] = "Self";
     response["action"] = static_cast<int>(actions::Play::getRoomList);
     response["roomList"] = app().getPlugin<PlayManager>()->parseInfo(begin, count);
