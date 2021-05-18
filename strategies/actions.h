@@ -33,7 +33,7 @@ namespace tech::strategies::actions {
         leaveRoom = 3,
         publishPlayMessage = 4,
         changeConfig = 5,
-        changeReady = 6,
+        changeMode = 6,
         pendingStart = 7,
         startGame = 8,
         endGame = 9,
