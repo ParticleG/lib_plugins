@@ -8,9 +8,9 @@
 #include <strategies/base/MessageHandler.h>
 
 namespace tech::strategies {
-    class ChangeReady : public MessageHandler {
+    class ChangeMode : public MessageHandler {
     public:
-        ChangeReady();
+        ChangeMode();
 
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,

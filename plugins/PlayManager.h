@@ -42,9 +42,9 @@ namespace tech::plugins {
                 const drogon::WebSocketConnectionPtr &connection
         );
 
-        void changeReady(
+        void changeMode(
                 const std::string &rid,
-                const bool &ready,
+                const int64_t &mode,
                 const drogon::WebSocketConnectionPtr &connection
         );
 

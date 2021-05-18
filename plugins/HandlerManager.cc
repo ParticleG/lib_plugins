@@ -21,7 +21,7 @@
 #include <strategies/play/LeaveRoom.h>
 #include <strategies/play/PublishPlayMessage.h>
 #include <strategies/play/ChangeConfig.h>
-#include <strategies/play/ChangeReady.h>
+#include <strategies/play/ChangeMode.h>
 #include <strategies/stream/PublishStreamData.h>
 #include <strategies/stream/PublishDeathData.h>
 #include <strategies/manage/GetGenericInfo.h>
@@ -59,7 +59,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     _handlerFactory.registerHandler<LeaveRoom>(actions::Prefix::play + actions::Play::leaveRoom);
     _handlerFactory.registerHandler<PublishPlayMessage>(actions::Prefix::play + actions::Play::publishPlayMessage);
     _handlerFactory.registerHandler<ChangeConfig>(actions::Prefix::play + actions::Play::changeConfig);
-    _handlerFactory.registerHandler<ChangeReady>(actions::Prefix::play + actions::Play::changeReady);
+    _handlerFactory.registerHandler<ChangeMode>(actions::Prefix::play + actions::Play::changeMode);
 
     _handlerFactory.registerHandler<PublishDeathData>(actions::Prefix::stream + actions::Stream::publishDeathData);
     _handlerFactory.registerHandler<PublishStreamData>(actions::Prefix::stream + actions::Stream::publishStreamData);

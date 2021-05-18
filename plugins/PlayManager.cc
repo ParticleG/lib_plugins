@@ -37,11 +37,11 @@ void PlayManager::subscribe(
     sharedRoom.room.subscribe(connection);
     auto play = _getPlay(connection);
 
-    play->setReady(false);
+    play->setMode(false);
 
     Json::Value data, message, response;
     data["config"] = play->getConfig();
-    data["ready"] = play->getReady();
+    data["mode"] = static_cast<int64_t>(play->getMode());
 
     message["type"] = "Broadcast";
     message["action"] = static_cast<int>(actions::Play::enterRoom);
@@ -52,9 +52,9 @@ void PlayManager::subscribe(
     response["action"] = static_cast<int>(actions::Play::enterRoom);
     response["data"] = sharedRoom.room.parseInfo();
     response["data"]["sid"] = play->getSid();
-    response["data"]["ready"] = play->getReady();
+    response["data"]["mode"] = static_cast<int64_t>(play->getMode());
     response["data"]["roomData"] = sharedRoom.room.getData();
-    response["data"]["histories"] = sharedRoom.room.getHistory(0, 10);
+    response["data"]["history"] = sharedRoom.room.getHistory(0, 10);
     response["data"]["players"] = sharedRoom.room.getPlayers();
     if (!sharedRoom.room.getRelatedStreamRid().empty()) {
         response["data"]["srid"] = sharedRoom.room.getRelatedStreamRid();
@@ -120,17 +120,17 @@ void PlayManager::changeConfig(
     publish(rid, static_cast<int>(actions::Play::changeConfig), move(data), connection, play->getSid());
 }
 
-void PlayManager::changeReady(
+void PlayManager::changeMode(
         const string &rid,
-        const bool &ready,
+        const int64_t &mode,
         const WebSocketConnectionPtr &connection
 ) {
-    misc::logger(typeid(*this).name(), "Changing config: (" + rid + ") " + to_string(ready));
+    misc::logger(typeid(*this).name(), "Changing mode: (" + rid + ") " + to_string(mode));
     auto play = _getPlay(connection);
     Json::Value data;
-    data["ready"] = ready;
-    play->setReady(ready);
-    publish(rid, static_cast<int>(actions::Play::changeReady), move(data), connection);
+    data["mode"] = mode;
+    play->setMode(mode);
+    publish(rid, static_cast<int>(actions::Play::changeMode), move(data), connection);
     _checkReady(rid);
 }
 
@@ -206,7 +206,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                     auto streamRoom = StreamRoom(
                             rid,
                             srid,
-                            uniqueRoom.room.getCount(),
+                            uniqueRoom.room.getPlayingMap(),
                             uniqueRoom.room.getCapacity()
                     );
                     misc::logger(typeid(*this).name(), "Try create stream room: " + srid);
@@ -220,7 +220,7 @@ void PlayManager::_checkReady(const std::string &rid) {
                 Json::Value response;
                 response["type"] = "Server";
                 response["action"] = static_cast<int>(actions::Play::startGame);
-                response["data"]["rid"] = srid;
+                response["data"]["srid"] = srid;
                 uniqueRoom.room.publish(static_cast<int>(actions::Play::startGame), move(response));
                 uniqueRoom.room.setPendingStart(false);
                 misc::logger(typeid(*this).name(), "Try reset room ready: " + rid);

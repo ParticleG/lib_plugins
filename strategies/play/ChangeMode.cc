@@ -3,7 +3,7 @@
 //
 
 #include <plugins/Configurator.h>
-#include <strategies/play/ChangeReady.h>
+#include <strategies/play/ChangeMode.h>
 
 using namespace drogon;
 using namespace drogon_model;
@@ -13,23 +13,23 @@ using namespace tech::structures;
 using namespace tech::utils;
 using namespace std;
 
-ChangeReady::ChangeReady() {}
+ChangeMode::ChangeMode() = default;
 
-CloseCode ChangeReady::fromJson(
+CloseCode ChangeMode::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
         const Json::Value &request,
         Json::Value &response
 ) {
     if (!(
             request.isMember("data") && request["data"].isObject() &&
-            request["data"].isMember("ready") && request["data"]["ready"].isBool()
+            request["data"].isMember("mode") && request["data"]["mode"].isInt64()
     )) {
         response["type"] = "Warn";
-        response["reason"] = "Wrong format: Requires bool type 'ready' in 'data'";
+        response["reason"] = "Wrong format: Requires Int64 type 'mode' in 'data'";
     } else {
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         try {
-            app().getPlugin<PlayManager>()->changeReady(rid, request["data"]["ready"].asBool(), wsConnPtr);
+            app().getPlugin<PlayManager>()->changeMode(rid, request["data"]["ready"].asInt64(), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";
