@@ -29,7 +29,7 @@ CloseCode ChangeMode::fromJson(
     } else {
         auto rid = get<string>(wsConnPtr->getContext<Play>()->getRid());
         try {
-            app().getPlugin<PlayManager>()->changeMode(rid, request["data"]["ready"].asInt64(), wsConnPtr);
+            app().getPlugin<PlayManager>()->changeMode(rid, request["data"]["mode"].asInt64(), wsConnPtr);
             return CloseCode::kNone;
         } catch (const exception &error) {
             response["type"] = "Warn";
