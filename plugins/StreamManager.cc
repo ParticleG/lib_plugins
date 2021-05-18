@@ -21,16 +21,17 @@ void StreamManager::shutdown() {
     LOG_INFO << "StreamManager shutdown.";
 }
 
-void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connection) {
-    auto sharedRoom = getSharedRoom(rid);
+void StreamManager::subscribe(const string &srid, WebSocketConnectionPtr connection) {
+    auto sharedRoom = getSharedRoom(srid);
     auto stream = _getStream(connection);
-    if (sharedRoom.room.getStart()) {
+    if (sharedRoom.room.getStart() || !sharedRoom.room.checkIfPlaying(stream->getUid())) {
         stream->setSpectate(true);
     }
     Json::Value broadcast, self;
     self["type"] = "Self";
     self["action"] = static_cast<int>(actions::Stream::enterRoom);
     self["data"] = stream->parsePlayerInfo(sharedRoom.room.getStart() ? sharedRoom.room.parseHistories() : Json::Value());
+    self["data"]["seed"] = sharedRoom.room.getSeed();
     self["data"]["connected"] = sharedRoom.room.getPlayers();
     connection->send(websocket::fromJson(self));
 
@@ -39,13 +40,13 @@ void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connecti
     broadcast["action"] = static_cast<int>(actions::Stream::enterRoom);
     broadcast["data"] = stream->parsePlayerInfo(Json::objectValue);
     sharedRoom.room.publish(move(broadcast), stream->getSid());
-    _checkReady(rid);
+    _checkReady(srid);
 }
 
-void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &connection) {
+void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr &connection) {
     {
         auto playerInfo = _getStream(connection)->parsePlayerInfo(Json::objectValue);
-        auto sharedRoom = getSharedRoom(rid);
+        auto sharedRoom = getSharedRoom(srid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
             _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
@@ -56,7 +57,7 @@ void StreamManager::unsubscribe(const string &rid, const WebSocketConnectionPtr 
             message["data"] = playerInfo;
             sharedRoom.room.publish(move(message));
         }
-        _checkFinished(rid);    // TODO: Ensure this is working properly.
+        _checkFinished(srid);    // TODO: Ensure this is working properly.
     }
     if (connection->connected()) {
         Json::Value response;
@@ -78,7 +79,6 @@ void StreamManager::startCountDown(const string &rid) {
                 Json::Value response;
                 response["type"] = "Server";
                 response["action"] = static_cast<int>(actions::Stream::startStreaming);
-                response["data"]["seed"] = misc::uniform_random();
                 sharedRoom.room.publish(move(response));
             }
         } catch (const exception &error) {
@@ -134,7 +134,6 @@ void StreamManager::_checkReady(const string &rid) {
                 Json::Value response;
                 response["type"] = "Server";
                 response["action"] = static_cast<int>(actions::Stream::startStreaming);
-                response["data"]["seed"] = misc::uniform_random();
                 sharedRoom.room.publish(move(response));
             } catch (const exception &error) {
                 LOG_FATAL << error.what();

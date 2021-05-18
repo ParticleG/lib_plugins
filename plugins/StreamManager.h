@@ -17,9 +17,9 @@ namespace tech ::plugins {
 
         void shutdown() override;
 
-        void subscribe(const std::string &rid, drogon::WebSocketConnectionPtr connection);
+        void subscribe(const std::string &srid, drogon::WebSocketConnectionPtr connection);
 
-        void unsubscribe(const std::string &rid, const drogon::WebSocketConnectionPtr &connection);
+        void unsubscribe(const std::string &srid, const drogon::WebSocketConnectionPtr &connection);
 
         void startCountDown(const std::string &rid);
 
