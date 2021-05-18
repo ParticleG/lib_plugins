@@ -30,7 +30,8 @@ void StreamManager::subscribe(const string &srid, WebSocketConnectionPtr connect
     Json::Value broadcast, self;
     self["type"] = "Self";
     self["action"] = static_cast<int>(actions::Stream::enterRoom);
-    self["data"] = stream->parsePlayerInfo(sharedRoom.room.getStart() ? sharedRoom.room.parseHistories() : Json::Value());
+    self["data"] = stream->parsePlayerInfo(stream->getSpectate() ? sharedRoom.room.parseHistories() : Json::Value());
+    self["data"]["start"] = sharedRoom.room.getStart();
     self["data"]["seed"] = sharedRoom.room.getSeed();
     self["data"]["connected"] = sharedRoom.room.getPlayers();
     connection->send(websocket::fromJson(self));
@@ -45,7 +46,7 @@ void StreamManager::subscribe(const string &srid, WebSocketConnectionPtr connect
 
 void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr &connection) {
     {
-        auto playerInfo = _getStream(connection)->parsePlayerInfo(Json::objectValue);
+        auto stream = _getStream(connection);
         auto sharedRoom = getSharedRoom(srid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
@@ -54,10 +55,12 @@ void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr
             Json::Value message;
             message["type"] = "Broadcast";
             message["action"] = static_cast<int>(actions::Stream::leaveRoom);
-            message["data"] = playerInfo;
+            message["data"] = stream->parsePlayerInfo(Json::objectValue);
             sharedRoom.room.publish(move(message));
         }
-        _checkFinished(srid);    // TODO: Ensure this is working properly.
+        if (!stream->getSpectate()) {
+            _checkFinished(srid);
+        }
     }
     if (connection->connected()) {
         Json::Value response;
@@ -71,15 +74,36 @@ void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr
 void StreamManager::startCountDown(const string &rid) {
     thread([this, rid]() {
         try {
-            this_thread::sleep_for(chrono::seconds(5));
-            auto sharedRoom = getSharedRoom(rid);
-            if (!sharedRoom.room.getStart()) {
-                sharedRoom.room.setStart(true);
-                this_thread::sleep_for(chrono::seconds(1));
-                Json::Value response;
-                response["type"] = "Server";
-                response["action"] = static_cast<int>(actions::Stream::startStreaming);
-                sharedRoom.room.publish(move(response));
+            this_thread::sleep_for(chrono::seconds(10));
+            bool noConnections = false;
+            {
+                auto sharedRoom = getSharedRoom(rid);
+                if (!sharedRoom.room.hasConnection()) {
+                    try {
+                        Json::Value result;
+                        auto playManager = app().getPlugin<PlayManager>();
+                        result["start"] = false;
+                        result["result"] = sharedRoom.room.getDeaths();
+                        playManager->publish(sharedRoom.room.getPlayRid(), static_cast<int>(actions::Play::endGame),
+                                             move(result));
+                        auto sharedPlayRoom = playManager->getSharedRoom(sharedRoom.room.getPlayRid());
+                        sharedPlayRoom.room.setRelatedStreamRid("");
+                        sharedPlayRoom.room.setStart(false);
+                    } catch (const exception &error) {
+                        LOG_WARN << error.what();
+                    }
+                    noConnections = true;
+                } else if (!sharedRoom.room.getStart()) {
+                    sharedRoom.room.setStart(true);
+                    this_thread::sleep_for(chrono::seconds(1));
+                    Json::Value response;
+                    response["type"] = "Server";
+                    response["action"] = static_cast<int>(actions::Stream::startStreaming);
+                    sharedRoom.room.publish(move(response));
+                }
+            }
+            if (noConnections) {
+                removeRoom(rid);
             }
         } catch (const exception &error) {
             LOG_FATAL << error.what();
