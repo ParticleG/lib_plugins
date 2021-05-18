@@ -29,9 +29,9 @@ CloseCode PublishDeathData::fromJson(
         response["reason"] = "Wrong format: Requires UInt64 type 'score' and 'survivalTime' in 'data'";
     } else {
         auto stream = wsConnPtr->getContext<Stream>();
-        if (stream->getWatch()) {
+        if (stream->getSpectate()) {
             response["type"] = "Warn";
-            response["reason"] = "You are in watch mode";
+            response["reason"] = "You are a spectator";
             return CloseCode::kNormalClosure;
         }
         stream->setScore(request["data"]["score"].asUInt64());

@@ -25,7 +25,7 @@ void StreamManager::subscribe(const string &rid, WebSocketConnectionPtr connecti
     auto sharedRoom = getSharedRoom(rid);
     auto stream = _getStream(connection);
     if (sharedRoom.room.getStart()) {
-        stream->setWatch(true);
+        stream->setSpectate(true);
     }
     Json::Value broadcast, self;
     self["type"] = "Self";

@@ -34,9 +34,9 @@ CloseCode PublishStreamData::fromJson(
             response["reason"] = "Get 'Stream' failed (nullptr)";
             return CloseCode::kUnexpectedCondition;
         }
-        if (stream->getWatch()) {
+        if (stream->getSpectate()) {
             response["type"] = "Warn";
-            response["reason"] = "You are in watch mode";
+            response["reason"] = "You are a spectator";
             return CloseCode::kNormalClosure;
         }
         auto data = request["data"];
