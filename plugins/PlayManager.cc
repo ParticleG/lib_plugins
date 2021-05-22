@@ -76,6 +76,7 @@ void PlayManager::unsubscribe(const string &rid, const WebSocketConnectionPtr &c
             message["action"] = static_cast<int>(actions::Play::leaveRoom);
             message["data"] = playerInfo; // TODO: Remove unnecessary items.
             sharedRoom.room.publish(static_cast<int>(actions::Play::leaveRoom), move(message));
+            _checkReady(rid); // TODO: Check if working
         }
     }
     if (connection->connected()) {
