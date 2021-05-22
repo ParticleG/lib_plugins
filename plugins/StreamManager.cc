@@ -73,7 +73,7 @@ void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr
 
 void StreamManager::startCountDown(const string &rid) {
     thread([this, rid]() {
-        try {
+        try {   // TODO: Use more accurate try catch
             this_thread::sleep_for(chrono::seconds(10));
             bool noConnections = false;
             {
@@ -107,7 +107,6 @@ void StreamManager::startCountDown(const string &rid) {
             }
         } catch (const exception &error) {
             LOG_FATAL << error.what();
-            abort();
         }
     }).detach();
 }
