@@ -35,6 +35,16 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/strategies/manage MANAGE_SRC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC STRUCTURES_LIB ${MAILIO_LIB})
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    find_package(Boost 1.75 REQUIRED regex)
+    if(Boost_FOUND)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${Boost_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${Boost_LIBRARIES})
+    endif()
+endif ()
+
 target_include_directories(${PROJECT_NAME} PUBLIC
         ${MAILIO_INCLUDE_DIR}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
