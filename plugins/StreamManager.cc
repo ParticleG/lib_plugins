@@ -50,8 +50,9 @@ void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr
         auto sharedRoom = getSharedRoom(srid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
-            _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
-
+            if (!stream->getSpectate()) {
+                stream->setPlace(sharedRoom.room.generatePlace());
+            }
             Json::Value message;
             message["type"] = "Broadcast";
             message["action"] = static_cast<int>(actions::Stream::leaveRoom);
@@ -120,7 +121,10 @@ void StreamManager::publish(
 ) {
     auto sharedRoom = getSharedRoom(rid);
     if (action == static_cast<int>(actions::Stream::publishDeathData)) {
-        _getStream(connection)->setPlace(sharedRoom.room.generatePlace());
+        auto stream = _getStream(connection);
+        if (!stream->getSpectate()) {
+            stream->setPlace(sharedRoom.room.generatePlace());
+        }
         _checkFinished(rid);
     }
     Json::Value response;
