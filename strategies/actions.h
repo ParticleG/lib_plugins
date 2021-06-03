@@ -15,7 +15,7 @@ namespace tech::strategies::actions {
     };
 
     enum class App {
-        getAppVersion = 0,
+        publishMessage = 0,
         getNotice = 1,
         validateAccount = 2,
         getUserCount = 3,
@@ -56,6 +56,7 @@ namespace tech::strategies::actions {
         getGenericInfo = 0,
         getPlayManagerStatus = 1,
         getStreamManagerStatus = 2,
+        shutdown = 9,
     };
 
     static int operator+(Prefix prefix, int action) {
