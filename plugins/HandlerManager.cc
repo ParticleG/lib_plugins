@@ -3,8 +3,6 @@
 //
 
 #include <plugins/HandlerManager.h>
-#include <strategies/app/GetAppVersion.h>
-#include <strategies/app/GetNotice.h>
 #include <strategies/app/ValidateAccount.h>
 #include <strategies/app/GetUserCount.h>
 #include <strategies/user/GetAccessToken.h>
@@ -27,6 +25,7 @@
 #include <strategies/manage/GetGenericInfo.h>
 #include <strategies/manage/GetPlayManagerStatus.h>
 #include <strategies/manage/GetStreamManagerStatus.h>
+#include <strategies/manage/Shutdown.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
@@ -38,8 +37,6 @@ using namespace std;
 HandlerManager::HandlerManager() = default;
 
 void HandlerManager::initAndStart(const Json::Value &config) {
-    _handlerFactory.registerHandler<GetAppVersion>(actions::Prefix::app + actions::App::getAppVersion);
-    _handlerFactory.registerHandler<GetNotice>(actions::Prefix::app + actions::App::getNotice);
     _handlerFactory.registerHandler<ValidateAccount>(actions::Prefix::app + actions::App::validateAccount);
     _handlerFactory.registerHandler<GetUserCount>(actions::Prefix::app + actions::App::getUserCount);
 
@@ -67,6 +64,7 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     _handlerFactory.registerHandler<GetGenericInfo>(actions::Prefix::manage + actions::Manage::getGenericInfo);
     _handlerFactory.registerHandler<GetPlayManagerStatus>(actions::Prefix::manage + actions::Manage::getPlayManagerStatus);
     _handlerFactory.registerHandler<GetStreamManagerStatus>(actions::Prefix::manage + actions::Manage::getStreamManagerStatus);
+    _handlerFactory.registerHandler<Shutdown>(actions::Prefix::manage + actions::Manage::shutdown);
     LOG_INFO << "HandlerManager loaded.";
 }
 
