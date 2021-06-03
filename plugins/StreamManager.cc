@@ -50,7 +50,7 @@ void StreamManager::unsubscribe(const string &srid, const WebSocketConnectionPtr
         auto sharedRoom = getSharedRoom(srid);
         sharedRoom.room.unsubscribe(connection);
         if (!sharedRoom.room.isEmpty()) {
-            if (!stream->getSpectate()) {
+            if (!stream->getDead() && !stream->getSpectate()) {
                 stream->setPlace(sharedRoom.room.generatePlace());
             }
             Json::Value message;
