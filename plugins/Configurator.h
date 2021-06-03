@@ -5,6 +5,7 @@
 #pragma once
 
 #include <drogon/plugins/Plugin.h>
+#include <unordered_set>
 
 namespace tech::plugins {
     class Configurator : public drogon::Plugin<Configurator> {
@@ -14,6 +15,8 @@ namespace tech::plugins {
         void initAndStart(const Json::Value &config) override;
 
         void shutdown() override;
+
+        [[nodiscard]] bool isSuperusers(const int64_t &uid) const;
 
         [[nodiscard]] uint64_t getAuthExpire() const;
 
@@ -39,6 +42,7 @@ namespace tech::plugins {
         uint32_t _port{};
         uint64_t _authTokenExpireTime{}, _accessTokenExpireTime{}, _emailExpireTime{};
         std::string _htmlPath{}, _username{}, _password{}, _mailAddress{}, _mailName{}, _hostname{};
+        std::unordered_set<int64_t> _superusers{};
     };
 }
 

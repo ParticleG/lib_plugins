@@ -11,6 +11,11 @@ void Configurator::initAndStart(const Json::Value &config) {
         config["version"].isMember("name") && config["version"]["name"].isString()) {
         LOG_INFO << "Running Version: " << config["versionName"].asString();
     }
+    if (config.isMember("superusers") && config["superusers"].isArray()) {
+        for (const auto &superuser : config["superusers"]) {
+            _superusers.insert(superuser.asInt64());
+        }
+    }
     if (config.isMember("tokenExpireTime") && config["tokenExpireTime"].isObject() &&
         config["tokenExpireTime"].isMember("auth") && config["tokenExpireTime"]["auth"].isUInt() &&
         config["tokenExpireTime"].isMember("access") && config["tokenExpireTime"]["access"].isUInt() &&
@@ -43,6 +48,8 @@ void Configurator::initAndStart(const Json::Value &config) {
     }
     LOG_INFO << "Configurator loaded.";
 }
+
+bool Configurator::isSuperusers(const int64_t &uid) const { return _superusers.contains(uid); }
 
 void Configurator::shutdown() { LOG_INFO << "Configurator shutdown."; }
 
