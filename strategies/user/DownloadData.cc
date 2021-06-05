@@ -40,7 +40,7 @@ CloseCode DownloadData::fromJson(
             for (const auto &item : request["data"]["sections"]) {
                 _downloadFromSection(data, item.asUInt(), result);
             }
-            response["action"] = static_cast<int>(actions::User::getAccessToken);
+            response["action"] = static_cast<int>(actions::User::downloadData);
             response["type"] = "Self";
             response["sections"] = result;
         } catch (const orm::DrogonDbException &e) {
