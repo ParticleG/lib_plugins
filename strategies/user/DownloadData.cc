@@ -42,7 +42,7 @@ CloseCode DownloadData::fromJson(
             }
             response["action"] = static_cast<int>(actions::User::downloadData);
             response["type"] = "Self";
-            response["sections"] = result;
+            response["data"]["sections"] = result;
         } catch (const orm::DrogonDbException &e) {
             LOG_ERROR << "error:" << e.base().what();
             response["type"] = "Error";
