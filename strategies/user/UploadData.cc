@@ -37,7 +37,10 @@ CloseCode UploadData::fromJson(
                     )
             );
             for (const auto &item : request["data"]["sections"]) {
-                _uploadToSection(data, item["section"].asUInt(), item["data"].asString());
+                if (item.isMember("section") && item["section"].isUInt() &&
+                    item.isMember("data") && item["data"].isString()) {
+                    _uploadToSection(data, item["section"].asUInt(), item["data"].asString());
+                }
             }
             _dataMapper.update(data);
             response["action"] = static_cast<int>(actions::User::uploadData);
