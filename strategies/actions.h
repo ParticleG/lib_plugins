@@ -53,10 +53,11 @@ namespace tech::strategies::actions {
         downloadData = 3,
     };
     enum class Manage {
-        getGenericInfo = 0,
-        getPlayManagerStatus = 1,
-        getStreamManagerStatus = 2,
+        publishMessage = 0,
         shutdown = 9,
+        getConnectionInfo = 10,
+        getPlayManagerStatus = 11,
+        getStreamManagerStatus = 12,
     };
 
     static int operator+(Prefix prefix, int action) {

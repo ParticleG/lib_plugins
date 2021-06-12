@@ -22,7 +22,8 @@
 #include <strategies/play/ChangeMode.h>
 #include <strategies/stream/PublishStreamData.h>
 #include <strategies/stream/PublishDeathData.h>
-#include <strategies/manage/GetGenericInfo.h>
+#include <strategies/manage/PublishMessage.h>
+#include <strategies/manage/GetConnectionInfo.h>
 #include <strategies/manage/GetPlayManagerStatus.h>
 #include <strategies/manage/GetStreamManagerStatus.h>
 #include <strategies/manage/Shutdown.h>
@@ -61,10 +62,12 @@ void HandlerManager::initAndStart(const Json::Value &config) {
     _handlerFactory.registerHandler<PublishDeathData>(actions::Prefix::stream + actions::Stream::publishDeathData);
     _handlerFactory.registerHandler<PublishStreamData>(actions::Prefix::stream + actions::Stream::publishStreamData);
 
-    _handlerFactory.registerHandler<GetGenericInfo>(actions::Prefix::manage + actions::Manage::getGenericInfo);
+    _handlerFactory.registerHandler<PublishMessage>(actions::Prefix::manage + actions::Manage::publishMessage);
+    _handlerFactory.registerHandler<Shutdown>(actions::Prefix::manage + actions::Manage::shutdown);
+    _handlerFactory.registerHandler<GetConnectionInfo>(actions::Prefix::manage + actions::Manage::getConnectionInfo);
     _handlerFactory.registerHandler<GetPlayManagerStatus>(actions::Prefix::manage + actions::Manage::getPlayManagerStatus);
     _handlerFactory.registerHandler<GetStreamManagerStatus>(actions::Prefix::manage + actions::Manage::getStreamManagerStatus);
-    _handlerFactory.registerHandler<Shutdown>(actions::Prefix::manage + actions::Manage::shutdown);
+
     LOG_INFO << "HandlerManager loaded.";
 }
 

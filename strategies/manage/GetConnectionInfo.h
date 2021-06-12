@@ -7,9 +7,9 @@
 #include <strategies/base/MessageHandler.h>
 
 namespace tech::strategies {
-    class GetGenericInfo : public MessageHandler {
+    class GetConnectionInfo : public MessageHandler {
     public:
-        GetGenericInfo();
+        GetConnectionInfo();
 
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,

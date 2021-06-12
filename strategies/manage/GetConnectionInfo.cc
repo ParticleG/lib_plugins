@@ -5,22 +5,22 @@
 #include <plugins/AppManager.h>
 #include <plugins/UserManager.h>
 #include <strategies/actions.h>
-#include <strategies/manage/GetGenericInfo.h>
+#include <strategies/manage/GetConnectionInfo.h>
 
 using namespace tech::plugins;
 using namespace tech::strategies;
 using namespace drogon;
 using namespace std;
 
-GetGenericInfo::GetGenericInfo() = default;
+GetConnectionInfo::GetConnectionInfo() = default;
 
-drogon::CloseCode GetGenericInfo::fromJson(
+drogon::CloseCode GetConnectionInfo::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
         const Json::Value &request,
         Json::Value &response
 ) {
     try {
-        response["action"] = static_cast<int>(actions::Manage::getGenericInfo);
+        response["action"] = static_cast<int>(actions::Manage::getConnectionInfo);
         response["type"] = "Self";
         response["data"] = app().getPlugin<UserManager>()->parseInfo();
         response["data"]["app"] = app().getPlugin<AppManager>()->parseInfo();
