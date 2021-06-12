@@ -3,7 +3,7 @@
 //
 
 #include <plugins/HandlerManager.h>
-#include <strategies/app/ValidateAccount.h>
+#include <strategies/app/CreateAccount.h>
 #include <strategies/app/GetUserCount.h>
 #include <strategies/user/GetAccessToken.h>
 #include <strategies/user/GetUserInfo.h>
@@ -38,7 +38,7 @@ using namespace std;
 HandlerManager::HandlerManager() = default;
 
 void HandlerManager::initAndStart(const Json::Value &config) {
-    _handlerFactory.registerHandler<ValidateAccount>(actions::Prefix::app + actions::App::validateAccount);
+    _handlerFactory.registerHandler<CreateAccount>(actions::Prefix::app + actions::App::validateAccount);
     _handlerFactory.registerHandler<GetUserCount>(actions::Prefix::app + actions::App::getUserCount);
 
     _handlerFactory.registerHandler<GetAccessToken>(actions::Prefix::user + actions::User::getAccessToken);
