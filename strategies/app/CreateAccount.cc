@@ -5,9 +5,9 @@
 #include <mailio/message.hpp>
 #include <mailio/smtp.hpp>
 #include <plugins/Configurator.h>
-#include <strategies/actions.h>
 #include <regex>
-#include <strategies/app/ValidateAccount.h>
+#include <strategies/actions.h>
+#include <strategies/app/CreateAccount.h>
 #include <utils/crypto.h>
 #include <utils/misc.h>
 #include <utils/websocket.h>
@@ -20,12 +20,12 @@ using namespace tech::strategies;
 using namespace tech::utils;
 using namespace std;
 
-ValidateAccount::ValidateAccount() :
+CreateAccount::CreateAccount() :
         _authMapper(app().getDbClient()),
         _dataMapper(app().getDbClient()),
         _infoMapper(app().getDbClient()) {}
 
-drogon::CloseCode ValidateAccount::fromJson(
+drogon::CloseCode CreateAccount::fromJson(
         const WebSocketConnectionPtr &wsConnPtr,
         const Json::Value &request,
         Json::Value &response
@@ -39,6 +39,7 @@ drogon::CloseCode ValidateAccount::fromJson(
         response["type"] = "Warn";
         response["reason"] = "Wrong format: Requires string type 'email', 'password' and 'username' in 'data'";
     } else {
+        bool sendSuccess = false;
         string email = request["data"]["email"].asString(),
                 password = request["data"]["password"].asString(),
                 username = request["data"]["username"].asString();
@@ -106,6 +107,8 @@ drogon::CloseCode ValidateAccount::fromJson(
                 response["action"] = static_cast<int>(actions::App::validateAccount);
                 response["type"] = "Server";
                 response["data"]["message"] = "Successfully sent email. Please check mailbox in 15 minutes";
+
+                sendSuccess = true;
             }
         } catch (const orm::DrogonDbException &e) {
             LOG_ERROR << "error:" << e.base().what();
@@ -120,6 +123,14 @@ drogon::CloseCode ValidateAccount::fromJson(
             LOG_ERROR << e.what();
             response["type"] = "Error";
             response["reason"] = e.what();
+        }
+        if(!sendSuccess){
+            try {
+                auto tempAuth = _authMapper.findOne(Criteria(Techmino::Auth::Cols::_email, CompareOperator::EQ, email));
+                _authMapper.deleteOne(tempAuth);
+            } catch (const orm::DrogonDbException &e) {
+                LOG_FATAL << "Remove unvalidated account failed";
+            }
         }
     }
     return CloseCode::kNormalClosure;

@@ -10,9 +10,9 @@
 #include <strategies/base/MessageHandler.h>
 
 namespace tech::strategies {
-    class ValidateAccount : public MessageHandler {
+    class CreateAccount : public MessageHandler {
     public:
-        ValidateAccount();
+        CreateAccount();
 
         drogon::CloseCode fromJson(
                 const drogon::WebSocketConnectionPtr &wsConnPtr,
